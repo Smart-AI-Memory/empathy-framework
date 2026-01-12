@@ -174,15 +174,15 @@ docs = [
 
 # Development dependencies
 dev = [
-    "pytest>=7.0,<9.0",
-    "pytest-asyncio>=0.21,<1.0",
-    "pytest-cov>=4.0,<5.0",
+    "pytest>=7.0,<10.0",
+    "pytest-asyncio>=0.21,<2.0",
+    "pytest-cov>=4.0,<8.0",
     "black>=24.3.0,<26.0",  # CVE fix: PYSEC-2024-48
     "mypy>=1.0,<2.0",
     "ruff>=0.1,<1.0",
     "coverage>=7.0,<8.0",
     "bandit>=1.7,<2.0",
-    "pre-commit>=3.0,<4.0",
+    "pre-commit>=3.0,<5.0",
     # Test dependencies for API and integration tests
     "httpx>=0.27.0,<1.0.0",  # For API testing
     "fastapi>=0.109.1,<1.0.0",  # For wizard API tests
@@ -295,15 +295,15 @@ all = [
     "mkdocs-with-pdf>=0.9.3,<1.0.0",
     "pymdown-extensions>=10.0,<11.0",
     # Dev tools
-    "pytest>=7.0,<9.0",
-    "pytest-asyncio>=0.21,<1.0",
-    "pytest-cov>=4.0,<5.0",
+    "pytest>=7.0,<10.0",
+    "pytest-asyncio>=0.21,<2.0",
+    "pytest-cov>=4.0,<8.0",
     "black>=24.3.0,<26.0",  # CVE fix
     "mypy>=1.0,<2.0",
     "ruff>=0.1,<1.0",
     "coverage>=7.0,<8.0",
     "bandit>=1.7,<2.0",
-    "pre-commit>=3.0,<4.0",
+    "pre-commit>=3.0,<5.0",
     "httpx>=0.27.0,<1.0.0",  # For API testing
     # Security constraint overrides for transitive dependencies
     "urllib3>=2.3.0,<3.0.0",  # CVE fix: GHSA-gm62, GHSA-2xpw
