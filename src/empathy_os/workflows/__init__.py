@@ -63,6 +63,9 @@ from .document_manager import DocumentManagerWorkflow
 from .documentation_orchestrator import DocumentationOrchestrator, OrchestratorResult
 from .health_check import HealthCheckWorkflow
 
+# CrewAI-pattern multi-agent workflows (v4.0.2)
+from .health_check_crew import HealthCheckCrew, HealthCheckCrewResult
+
 # Keyboard Conductor (v3.6) - keyboard shortcut generation
 from .keyboard_shortcuts import KeyboardShortcutWorkflow
 from .manage_documentation import ManageDocumentationCrew, ManageDocumentationCrewResult
@@ -70,6 +73,7 @@ from .perf_audit import PerformanceAuditWorkflow
 from .pr_review import PRReviewResult, PRReviewWorkflow
 from .refactor_plan import RefactorPlanWorkflow
 from .release_prep import ReleasePreparationWorkflow
+from .release_prep_crew import ReleasePreparationCrew, ReleasePreparationCrewResult
 from .research_synthesis import ResearchSynthesisWorkflow
 
 # Security crew integration (v3.0)
@@ -77,6 +81,7 @@ from .secure_release import SecureReleasePipeline, SecureReleaseResult
 from .security_audit import SecurityAuditWorkflow
 from .step_config import WorkflowStepConfig, steps_from_tier_map, validate_step_config
 from .test5 import Test5Workflow
+from .test_coverage_boost_crew import TestCoverageBoostCrew, TestCoverageBoostCrewResult
 from .test_gen import TestGenerationWorkflow
 
 # Re-export CLI commands from workflow_commands.py
@@ -129,6 +134,10 @@ _DEFAULT_WORKFLOWS: dict[str, type] = {
     "manage-docs": ManageDocumentationCrew,
     # Keyboard Conductor (v3.6) - keyboard shortcut generation
     "keyboard-shortcuts": KeyboardShortcutWorkflow,
+    # CrewAI-pattern multi-agent workflows (v4.0.2)
+    "health-check-crew": HealthCheckCrew,
+    "release-prep-crew": ReleasePreparationCrew,
+    "test-coverage-boost": TestCoverageBoostCrew,
     # User-generated workflows
     "document-manager": DocumentManagerWorkflow,
     "test5": Test5Workflow,
@@ -319,6 +328,13 @@ __all__ = [
     "DocumentationOrchestrator",
     # Health check crew integration (v3.1)
     "HealthCheckWorkflow",
+    # CrewAI-pattern multi-agent workflows (v4.0.2)
+    "HealthCheckCrew",
+    "HealthCheckCrewResult",
+    "ReleasePreparationCrew",
+    "ReleasePreparationCrewResult",
+    "TestCoverageBoostCrew",
+    "TestCoverageBoostCrewResult",
     # Keyboard Conductor (v3.6)
     "KeyboardShortcutWorkflow",
     "ManageDocumentationCrew",
