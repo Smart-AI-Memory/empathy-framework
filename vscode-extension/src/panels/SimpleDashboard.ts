@@ -22,6 +22,15 @@ export class SimpleDashboardProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
 
+        // Handle messages from the webview
+        webviewView.webview.onDidReceiveMessage((message) => {
+            switch (message.type) {
+                case 'refresh':
+                    this.updateData();
+                    break;
+            }
+        });
+
         // Send initial data immediately
         this.updateData();
     }
