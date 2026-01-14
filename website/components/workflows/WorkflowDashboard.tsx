@@ -16,6 +16,8 @@ interface WorkflowRun {
   savings_percent: number;
   cost: number;
   duration_ms: number;
+  error?: string;
+  tier?: 'cheap' | 'capable' | 'premium';
 }
 
 interface TimeSeriesData {
@@ -71,6 +73,24 @@ interface WorkflowStats {
   };
 }
 
+// Helper to format relative time (e.g., "2 min ago", "1 hour ago")
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return 'just now';
+  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+  if (diffDay === 1) return 'yesterday';
+  if (diffDay < 7) return `${diffDay} days ago`;
+  return dateString.slice(0, 10);
+}
+
 export default function WorkflowDashboard() {
   const [stats, setStats] = useState<WorkflowStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,8 +112,8 @@ export default function WorkflowDashboard() {
 
   useEffect(() => {
     fetchStats();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
+    // Auto-refresh every 60 seconds (reduced from 30s to lower API load)
+    const interval = setInterval(fetchStats, 60000);
     return () => clearInterval(interval);
   }, [fetchStats]);
 
@@ -249,52 +269,109 @@ export default function WorkflowDashboard() {
 
       {/* Recent Runs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Runs</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Runs</h2>
+          <span className="text-xs text-gray-400">Auto-refresh: 60s</span>
+        </div>
         {stats.recent_runs.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {stats.recent_runs.slice(0, 5).map((run, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0"
+                className={`rounded-lg border p-3 ${
+                  run.success
+                    ? 'border-gray-100 bg-white'
+                    : 'border-red-100 bg-red-50'
+                }`}
               >
-                <span className={run.success ? 'text-green-500' : 'text-red-500'}>
-                  {run.success ? '✓' : '✗'}
-                </span>
-                <span className="font-medium text-gray-900 min-w-[100px]">
-                  {run.workflow}
-                </span>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                  {run.provider}
-                </span>
-                <span className="ml-auto flex items-center gap-4 text-sm">
-                  <span className="text-green-600 font-medium">
-                    {run.savings_percent.toFixed(0)}% saved
+                <div className="flex items-center gap-3">
+                  {/* Status icon */}
+                  <span className={`text-lg ${run.success ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {run.success ? '✓' : '✗'}
                   </span>
-                  <span className="text-gray-400">
-                    {run.started_at?.slice(0, 16).replace('T', ' ')}
+
+                  {/* Workflow name */}
+                  <span className="font-medium text-gray-900 min-w-[100px]">
+                    {run.workflow}
                   </span>
-                </span>
+
+                  {/* Duration badge */}
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-mono">
+                    {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : '--'}
+                  </span>
+
+                  {/* Cost badge */}
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-mono">
+                    ${run.cost?.toFixed(4) || '0.00'}
+                  </span>
+
+                  {/* Tier badge with standardized colors */}
+                  {run.tier && (
+                    <span className={`text-xs px-2 py-1 rounded font-medium ${
+                      run.tier === 'cheap'
+                        ? 'bg-green-100 text-green-700'
+                        : run.tier === 'capable'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-violet-100 text-violet-700'
+                    }`}>
+                      {run.tier}
+                    </span>
+                  )}
+
+                  {/* Spacer */}
+                  <span className="flex-1" />
+
+                  {/* Savings (only show if successful) */}
+                  {run.success && run.savings_percent > 0 && (
+                    <span className="text-emerald-600 font-medium text-sm">
+                      {run.savings_percent.toFixed(0)}% saved
+                    </span>
+                  )}
+
+                  {/* Timestamp */}
+                  <span className="text-gray-400 text-xs">
+                    {run.started_at ? formatRelativeTime(run.started_at) : '--'}
+                  </span>
+                </div>
+
+                {/* Error message (if failed) */}
+                {!run.success && run.error && (
+                  <div className="mt-2 pl-8">
+                    <p className="text-xs text-red-600 font-mono bg-red-100 px-2 py-1 rounded inline-block">
+                      {run.error.length > 80 ? `${run.error.slice(0, 80)}...` : run.error}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">
-            No workflow runs yet. Run a workflow using the CLI:
-            <code className="ml-2 bg-gray-100 px-2 py-1 rounded text-sm">
-              empathy workflow run research
-            </code>
-          </p>
+          <div className="text-center py-8">
+            <p className="text-gray-500 mb-4">
+              No workflow runs yet. Get started with:
+            </p>
+            <div className="inline-flex flex-col gap-2">
+              <code className="bg-gray-100 px-4 py-2 rounded text-sm font-mono text-indigo-600">
+                empathy workflow run health-check --path .
+              </code>
+              <code className="bg-gray-100 px-4 py-2 rounded text-sm font-mono text-indigo-600">
+                empathy workflow run release-prep --path .
+              </code>
+            </div>
+          </div>
         )}
       </div>
 
       {/* CLI Commands */}
       <div className="bg-gray-50 rounded-xl p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">CLI Commands</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <CommandCard cmd="empathy workflow list" desc="List all workflows" />
-          <CommandCard cmd="empathy workflow run research" desc="Run research workflow" />
+          <CommandCard cmd="empathy workflow run health-check --path ." desc="Run health check crew (v4.0.2)" isNew />
+          <CommandCard cmd="empathy workflow run release-prep --path ." desc="Run release prep crew (v4.0.2)" isNew />
+          <CommandCard cmd="empathy workflow run test-coverage-boost --path ." desc="Run test coverage crew (v4.0.2)" isNew />
           <CommandCard cmd="empathy workflow run code-review" desc="Run code review" />
-          <CommandCard cmd="empathy workflow describe research --provider hybrid" desc="View workflow details" />
+          <CommandCard cmd="empathy workflow describe health-check" desc="View workflow details" />
         </div>
       </div>
     </div>
@@ -376,10 +453,15 @@ function TierUsageFallback({ byTier }: { byTier: { cheap: number; capable: numbe
   );
 }
 
-function CommandCard({ cmd, desc }: { cmd: string; desc: string }) {
+function CommandCard({ cmd, desc, isNew }: { cmd: string; desc: string; isNew?: boolean }) {
   return (
-    <div className="bg-white rounded-lg px-4 py-3 border border-gray-200">
-      <code className="text-sm text-indigo-600 font-mono">{cmd}</code>
+    <div className={`bg-white rounded-lg px-4 py-3 border ${isNew ? 'border-indigo-200 bg-indigo-50' : 'border-gray-200'}`}>
+      <div className="flex items-center gap-2">
+        <code className="text-sm text-indigo-600 font-mono flex-1">{cmd}</code>
+        {isNew && (
+          <span className="text-xs bg-indigo-600 text-white px-1.5 py-0.5 rounded font-medium">NEW</span>
+        )}
+      </div>
       <p className="text-xs text-gray-500 mt-1">{desc}</p>
     </div>
   );

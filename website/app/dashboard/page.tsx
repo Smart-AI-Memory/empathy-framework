@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Healthcare Wizards Dashboard - Restored from AI Nurse Florence
- * Centralized access to all clinical documentation wizards
+ * Empathy Framework Wizards Dashboard
+ * Centralized access to developer tools and clinical documentation wizards
+ * v4.0.2: Added Developer Tools category with CrewAI-powered workflows
  */
 
 import { useState } from 'react';
@@ -26,7 +27,26 @@ interface WizardCategory {
   wizards: WizardCard[];
 }
 
+// Extended wizard interface for developer tools with CLI commands
+interface DeveloperWizardCard extends WizardCard {
+  cliCommand?: string;
+  estimatedTime?: string;
+  estimatedCost?: string;
+  agents?: number;
+}
+
 const wizardCategories: WizardCategory[] = [
+  {
+    id: 'developer',
+    title: 'Developer Tools',
+    icon: '💻',
+    gradient: 'from-slate-600 to-slate-800',
+    wizards: [
+      { id: 'health-check', title: 'Health Check', description: 'CrewAI-powered codebase health analysis with lint, type, and security checks', icon: '🩺', steps: 5, color: 'text-slate-600', bgColor: 'bg-slate-100' },
+      { id: 'release-prep', title: 'Release Prep', description: 'Pre-release validation crew with blocker detection and changelog analysis', icon: '🚀', steps: 4, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+      { id: 'test-coverage', title: 'Test Coverage Boost', description: 'Intelligent test generation for coverage gaps using multi-agent analysis', icon: '🧪', steps: 3, color: 'text-emerald-600', bgColor: 'bg-emerald-100' },
+    ],
+  },
   {
     id: 'core',
     title: 'Core Documentation',
@@ -131,14 +151,16 @@ export default function HealthcareWizardsDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <span className="text-red-500">💓</span>
-                AI Nurse Florence
+                Empathy Framework
               </h1>
-              <p className="text-gray-600">Clinical Wizards Dashboard</p>
+              <p className="text-gray-600">Developer Tools & Clinical Wizards Dashboard</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-semibold text-sm">
-                🏥 Med-Surg
+              <div className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg font-semibold text-xs">
+                💻 Dev Tools
+              </div>
+              <div className="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg font-semibold text-xs">
+                🏥 Healthcare
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-indigo-600">{totalWizards}</div>
@@ -188,6 +210,11 @@ export default function HealthcareWizardsDashboard() {
               <h2 className="font-bold text-lg flex items-center gap-2">
                 <span>{category.icon}</span>
                 {category.title}
+                {category.id === 'developer' && (
+                  <span className="ml-2 px-2 py-0.5 bg-white/20 rounded text-xs font-medium">
+                    NEW in v4.0.2
+                  </span>
+                )}
               </h2>
             </div>
 
@@ -209,7 +236,31 @@ export default function HealthcareWizardsDashboard() {
                   {selectedWizard === wizard.id && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <p className="text-xs text-gray-600 mb-3">{wizard.description}</p>
-                      {wizard.id === 'sbar' ? (
+                      {/* Developer Tools - Show CLI command */}
+                      {category.id === 'developer' ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>~{wizard.id === 'health-check' ? '67s' : wizard.id === 'release-prep' ? '90s' : '60s'}</span>
+                            <span>•</span>
+                            <span>${wizard.id === 'health-check' ? '0.05' : wizard.id === 'release-prep' ? '0.12' : '0.06'}</span>
+                            <span>•</span>
+                            <span>{wizard.id === 'health-check' ? '5' : wizard.id === 'release-prep' ? '4' : '3'} agents</span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const cmd = `empathy workflow run ${wizard.id} --path .`;
+                              navigator.clipboard.writeText(cmd);
+                            }}
+                            className="block w-full text-center px-3 py-2 bg-slate-700 text-white rounded text-sm font-mono hover:bg-slate-800 transition-colors"
+                          >
+                            Copy CLI Command
+                          </button>
+                          <code className="block text-xs text-gray-500 text-center font-mono">
+                            empathy workflow run {wizard.id} --path .
+                          </code>
+                        </div>
+                      ) : wizard.id === 'sbar' ? (
                         <Link
                           href="/dashboard/sbar"
                           className="block w-full text-center px-3 py-2 bg-indigo-600 text-white rounded text-sm font-semibold hover:bg-indigo-700"

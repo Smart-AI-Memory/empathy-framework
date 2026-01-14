@@ -2068,6 +2068,26 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 </button>
             </div>
 
+            <!-- CrewAI Workflows (v4.0.2) -->
+            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                <span style="opacity: 0.6;">CREWAI WORKFLOWS</span>
+                <span style="background: #6366f1; color: white; padding: 1px 5px; border-radius: 3px; font-size: 9px;">NEW</span>
+            </div>
+            <div class="actions-grid workflow-grid">
+                <button class="action-btn workflow-btn" data-workflow="health-check" title="CrewAI health check: 5 agents analyze lint, types, tests, security, deps (~67s, $0.05)">
+                    <span class="action-icon">&#x1FA7A;</span>
+                    <span>Health Check</span>
+                </button>
+                <button class="action-btn workflow-btn" data-workflow="release-prep" title="CrewAI release prep: blocker detection, changelog analysis (~90s, $0.12)">
+                    <span class="action-icon">&#x1F680;</span>
+                    <span>Release Prep</span>
+                </button>
+                <button class="action-btn workflow-btn" data-workflow="test-coverage-boost" title="CrewAI test coverage: intelligent test generation for coverage gaps (~60s, $0.06)">
+                    <span class="action-icon">&#x1F9EA;</span>
+                    <span>Test Coverage</span>
+                </button>
+            </div>
+
             <!-- Quality & Testing -->
             <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">QUALITY & TESTING</div>
             <div class="actions-grid workflow-grid">
@@ -2078,10 +2098,6 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 <button class="action-btn workflow-btn" data-workflow="bug-predict" title="AI-powered bug prediction using pattern analysis and code smells">
                     <span class="action-icon">&#x1F41B;</span>
                     <span>Predict Bugs</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="health-check" title="Run HealthCheckCrew for comprehensive 5-agent project health analysis">
-                    <span class="action-icon">&#x1FA7A;</span>
-                    <span>Health Check</span>
                 </button>
             </div>
 
