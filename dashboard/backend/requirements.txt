@@ -6,9 +6,9 @@ fastapi==0.115.6
 uvicorn[standard]==0.34.0
 python-multipart==0.0.20
 
-# Pydantic for validation
-pydantic==2.5.3
-pydantic-settings==2.1.0
+# Pydantic for validation (aligned with main pyproject.toml)
+pydantic>=2.0.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
 
 # CORS middleware
 python-cors==1.0.0
@@ -26,8 +26,8 @@ structlog==24.1.0
 # Redis client (for memory system)
 redis==5.0.1
 
-# Type hints
-typing-extensions==4.9.0
+# Type hints (aligned with main pyproject.toml)
+typing-extensions>=4.0.0,<5.0.0
 
 # Development dependencies (optional)
 # Uncomment for development:

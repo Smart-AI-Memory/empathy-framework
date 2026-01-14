@@ -15,4 +15,7 @@ urllib3>=2.3.0           # CVE: GHSA-gm62, GHSA-2xpw
 # JWT - Use PyJWT with cryptography backend (replaces python-jose + ecdsa)
 # This eliminates the ecdsa CVE (GHSA-wj6h-64fc-37mp) by not using ecdsa at all
 PyJWT[crypto]>=2.8.0     # Secure JWT library using cryptography
-cryptography>=42.0.0     # Well-audited crypto library
+cryptography>=44.0.0     # CVE fix: Bleichenbacher timing attack (CVE-2023-50782), OpenSSL fixes
+
+# LangChain ecosystem - CVE-2025-68664 (LangGrinch) serialization injection fix
+langchain-core>=1.2.6    # CVE fix: CVSS 9.3 - secret extraction, code execution

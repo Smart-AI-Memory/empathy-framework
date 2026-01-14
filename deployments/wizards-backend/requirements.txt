@@ -10,5 +10,5 @@ pydantic>=2.0.0
 python-multipart>=0.0.9
 aiofiles>=24.0.0
 
-# Empathy Framework with all features
-empathy-framework[full]>=2.2.9
+# Empathy Framework with all features (aligned with current version)
+empathy-framework[full]>=4.0.0

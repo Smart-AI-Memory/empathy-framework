@@ -58,7 +58,7 @@ dependencies = [
     "anthropic>=0.25.0,<1.0.0",  # Core LLM provider
     "crewai>=0.1.0,<1.0.0",  # CrewAI integration (core feature in v3.7.0)
     "langchain>=0.1.0,<2.0.0",  # Required for workflows
-    "langchain-core>=1.2.6,<2.0.0",  # Required for workflows (1.2.6+ has security fixes, compatible with langchain-anthropic)
+    "langchain-core>=1.2.6,<2.0.0",  # CVE-2025-68664 fix, compatible with langchain-anthropic
 ]
 
 [project.optional-dependencies]
@@ -82,7 +82,7 @@ memdocs = [
 # LangChain ecosystem for agents/workflows
 agents = [
     "langchain>=1.0.0,<2.0.0",
-    "langchain-core>=1.2.5,<2.0.0",  # 1.2.5+ has security fixes
+    "langchain-core>=1.2.6,<2.0.0",  # CVE-2025-68664 fix (serialization injection)
     "langchain-text-splitters>=0.3.9,<0.4.0",
     "langgraph>=1.0.0,<2.0.0",  # 1.0+ required for langgraph-checkpoint 3.0 (RCE fix)
     "langgraph-checkpoint>=3.0.0,<4.0.0",  # Security: GHSA-wwqv-p2pp-99h5 (RCE fix)
@@ -100,6 +100,14 @@ cache = [
     "sentence-transformers>=2.0.0,<4.0.0",
     "torch>=2.0.0,<3.0.0",
     "numpy>=1.24.0,<3.0.0",
+]
+
+# Lightweight cache without PyTorch (~500MB smaller)
+# Users install CPU-only torch separately: pip install torch --index-url https://download.pytorch.org/whl/cpu
+cache-lite = [
+    "sentence-transformers>=2.0.0,<4.0.0",
+    "numpy>=1.24.0,<3.0.0",
+    # Note: torch must be installed separately with CPU-only build for minimal size
 ]
 
 # Healthcare organizations - enterprise + compliance + healthcare plugins
@@ -148,7 +156,7 @@ backend = [
 # LSP server for editor integration (optional)
 lsp = [
     "pygls>=1.0.0,<2.0.0",
-    "lsprotocol>=2023.0.0,<2024.0.0",
+    "lsprotocol>=2023.0.0,<2025.0.0",
 ]
 
 # Windows compatibility
@@ -179,7 +187,7 @@ dev = [
     "pytest-cov>=4.0,<5.0",
     "black>=24.3.0,<26.0",  # CVE fix: PYSEC-2024-48
     "mypy>=1.0,<2.0",
-    "ruff>=0.1,<1.0",
+    "ruff>=0.8,<1.0",
     "coverage>=7.0,<8.0",
     "bandit>=1.7,<2.0",
     "pre-commit>=3.0,<4.0",
@@ -198,7 +206,7 @@ developer = [
     "memdocs>=1.0.0",
     # Agents (updated for security fixes)
     "langchain>=1.0.0,<2.0.0",
-    "langchain-core>=1.2.5,<2.0.0",  # 1.2.5+ has security fixes
+    "langchain-core>=1.2.6,<2.0.0",  # CVE-2025-68664 fix (serialization injection)
     "langchain-text-splitters>=0.3.9,<0.4.0",
     "langgraph>=1.0.0,<2.0.0",  # 1.0+ required for langgraph-checkpoint 3.0 (RCE fix)
     "langgraph-checkpoint>=3.0.0,<4.0.0",  # Security: GHSA-wwqv-p2pp-99h5 (RCE fix)
@@ -245,7 +253,7 @@ full = [
     "memdocs>=1.0.0",
     # Agents (updated for security fixes)
     "langchain>=1.0.0,<2.0.0",
-    "langchain-core>=1.2.5,<2.0.0",  # 1.2.5+ has security fixes
+    "langchain-core>=1.2.6,<2.0.0",  # CVE-2025-68664 fix (serialization injection)
     "langchain-text-splitters>=0.3.9,<0.4.0",
     "langgraph>=1.0.0,<2.0.0",  # 1.0+ required for langgraph-checkpoint 3.0 (RCE fix)
     "langgraph-checkpoint>=3.0.0,<4.0.0",  # Security: GHSA-wwqv-p2pp-99h5 (RCE fix)
@@ -265,7 +273,7 @@ all = [
     "memdocs>=1.0.0",
     # Agents (updated for security fixes)
     "langchain>=1.0.0,<2.0.0",
-    "langchain-core>=1.2.5,<2.0.0",  # 1.2.5+ has security fixes
+    "langchain-core>=1.2.6,<2.0.0",  # CVE-2025-68664 fix (serialization injection)
     "langchain-text-splitters>=0.3.9,<0.4.0",
     "langgraph>=1.0.0,<2.0.0",  # 1.0+ required for langgraph-checkpoint 3.0 (RCE fix)
     "langgraph-checkpoint>=3.0.0,<4.0.0",  # Security: GHSA-wwqv-p2pp-99h5 (RCE fix)
@@ -281,7 +289,7 @@ all = [
     "PyJWT[crypto]>=2.8.0",  # JWT authentication
     # LSP
     "pygls>=1.0.0,<2.0.0",
-    "lsprotocol>=2023.0.0,<2024.0.0",
+    "lsprotocol>=2023.0.0,<2025.0.0",
     # Windows
     "colorama>=0.4.6,<1.0.0",
     # OpenTelemetry
@@ -300,7 +308,7 @@ all = [
     "pytest-cov>=4.0,<5.0",
     "black>=24.3.0,<26.0",  # CVE fix
     "mypy>=1.0,<2.0",
-    "ruff>=0.1,<1.0",
+    "ruff>=0.8,<1.0",
     "coverage>=7.0,<8.0",
     "bandit>=1.7,<2.0",
     "pre-commit>=3.0,<4.0",
