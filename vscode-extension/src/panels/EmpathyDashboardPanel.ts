@@ -2424,7 +2424,7 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
             console.log('[EmpathyDashboard] WARNING: test-gen button not found!');
         }
 
-        // Meta-Orchestration v4.0 button handlers - run CrewAI workflows
+        // Meta-Orchestration v4.0 button handlers - run orchestrated workflows with real tools
         const healthCheckBtn = document.getElementById('btn-health-check-v4');
         if (healthCheckBtn) {
             healthCheckBtn.addEventListener('click', function(e) {
@@ -2970,9 +2970,9 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 resultsStatus.style.color = 'var(--vscode-testing-iconPassed)';
                 resultsStatus.innerHTML = '&#x2714; Complete';
 
-                // Check if output is crew workflow result (has verdict/quality_score)
-                const crewWorkflows = ['pro-review', 'pr-review', 'health-check', 'release-prep'];
-                if (crewWorkflows.includes(data.workflow) || data.output.includes('"verdict"') || data.output.includes('"quality_score"')) {
+                // Check if output is v4.0 workflow result (has verdict/quality_score)
+                const v4Workflows = ['pro-review', 'pr-review', 'health-check', 'release-prep'];
+                if (v4Workflows.includes(data.workflow) || data.output.includes('"verdict"') || data.output.includes('"quality_score"')) {
                     try {
                         resultsContent.innerHTML = formatCrewOutput(data.output);
                     } catch (e) {
@@ -3005,7 +3005,7 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
             }
         }
 
-        // Format crew workflow output with verdict badges, quality scores, etc.
+        // Format v4.0 workflow output with verdict badges, quality scores, etc.
         function formatCrewOutput(output) {
             // Try to parse JSON from output
             let data = null;

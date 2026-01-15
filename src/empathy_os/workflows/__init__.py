@@ -62,7 +62,6 @@ from .document_gen import DocumentGenerationWorkflow
 from .document_manager import DocumentManagerWorkflow
 from .documentation_orchestrator import DocumentationOrchestrator, OrchestratorResult
 from .health_check import HealthCheckWorkflow
-from .health_check_crew import HealthCheckCrew, HealthCheckCrewResult
 
 # Keyboard Conductor (v3.6) - keyboard shortcut generation
 from .keyboard_shortcuts import KeyboardShortcutWorkflow
@@ -75,9 +74,6 @@ from .perf_audit import PerformanceAuditWorkflow
 from .pr_review import PRReviewResult, PRReviewWorkflow
 from .refactor_plan import RefactorPlanWorkflow
 from .release_prep import ReleasePreparationWorkflow
-
-# CrewAI-based crews (working replacements for broken orchestrator)
-from .release_prep_crew import ReleasePreparationCrew, ReleasePreparationCrewResult
 from .research_synthesis import ResearchSynthesisWorkflow
 
 # Security crew integration (v3.0)
@@ -140,15 +136,12 @@ _DEFAULT_WORKFLOWS: dict[str, type] = {
     # User-generated workflows
     "document-manager": DocumentManagerWorkflow,
     "test5": Test5Workflow,
-    # CrewAI-based multi-agent workflows (v4.0.0 - production ready)
-    "health-check": HealthCheckCrew,  # Multi-agent health check (3-6 agents)
-    "release-prep": ReleasePreparationCrew,  # Multi-agent release validation (4 agents)
-    # Meta-orchestration workflows (v4.0.0 - production ready with real analysis tools)
-    "orchestrated-health-check": OrchestratedHealthCheckWorkflow,  # Real security/coverage/quality analysis
-    "orchestrated-release-prep": OrchestratedReleasePrepWorkflow,  # Real quality gate validation
-    # Experimental aliases (backward compat)
-    "orchestrated-health-check-experimental": OrchestratedHealthCheckWorkflow,  # ALIAS
-    "orchestrated-release-prep-experimental": OrchestratedReleasePrepWorkflow,  # ALIAS
+    # v4.0 Meta-orchestration workflows (production ready with real analysis tools)
+    "health-check": OrchestratedHealthCheckWorkflow,  # Real security/coverage/quality analysis
+    "release-prep": OrchestratedReleasePrepWorkflow,  # Real quality gate validation
+    # Backward compatibility aliases
+    "orchestrated-health-check": OrchestratedHealthCheckWorkflow,  # ALIAS
+    "orchestrated-release-prep": OrchestratedReleasePrepWorkflow,  # ALIAS
 }
 
 # Opt-in workflows - not included by default, must be explicitly enabled
@@ -378,12 +371,7 @@ __all__ = [
     "refresh_workflow_registry",
     "steps_from_tier_map",
     "validate_step_config",
-    # CrewAI-based multi-agent workflows (v4.0.0)
-    "HealthCheckCrew",
-    "HealthCheckCrewResult",
-    "ReleasePreparationCrew",
-    "ReleasePreparationCrewResult",
-    # Meta-orchestration workflows (v4.0)
+    # v4.0 Meta-orchestration workflows
     "OrchestratedHealthCheckWorkflow",
     "OrchestratedReleasePrepWorkflow",
     "HealthCheckReport",

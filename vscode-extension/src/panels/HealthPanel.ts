@@ -426,7 +426,7 @@ export class HealthPanel {
     <div class="card">
         <div class="card-title">Health Actions</div>
         <div class="actions-grid">
-            <button class="action-btn" onclick="runAction('runScan')" title="Run HealthCheckCrew for comprehensive 5-agent analysis">
+            <button class="action-btn" onclick="runAction('runScan')" title="Run v4.0 orchestrated health check with real analysis tools">
                 <span class="action-icon">&#x1FA7A;</span>
                 <span>Deep Scan</span>
             </button>

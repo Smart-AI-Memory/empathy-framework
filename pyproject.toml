@@ -346,10 +346,9 @@ perf-audit = "empathy_os.workflows.perf_audit:PerformanceAuditWorkflow"
 test-gen = "empathy_os.workflows.test_gen:TestGenerationWorkflow"
 refactor-plan = "empathy_os.workflows.refactor_plan:RefactorPlanWorkflow"
 dependency-check = "empathy_os.workflows.dependency_check:DependencyCheckWorkflow"
-# v4.0.0 CrewAI-based multi-agent workflows (production)
-release-prep = "empathy_os.workflows.release_prep_crew:ReleasePreparationCrew"
-health-check = "empathy_os.workflows.health_check_crew:HealthCheckCrew"
-test-coverage-boost = "empathy_os.workflows.test_coverage_boost_crew:TestCoverageBoostCrew"
+# v4.0 Meta-orchestration workflows (production ready with real analysis tools)
+release-prep = "empathy_os.workflows.orchestrated_release_prep:OrchestratedReleasePrepWorkflow"
+health-check = "empathy_os.workflows.orchestrated_health_check:OrchestratedHealthCheckWorkflow"
 # Legacy single-agent versions
 release-prep-legacy = "empathy_os.workflows.release_prep:ReleasePreparationWorkflow"
 health-check-legacy = "empathy_os.workflows.health_check:HealthCheckWorkflow"
