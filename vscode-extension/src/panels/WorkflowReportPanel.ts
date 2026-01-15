@@ -140,7 +140,6 @@ export class WorkflowReportPanel {
         const titles: Record<string, string> = {
             'health-check': '🏥 Health Check Report (v4.0 CrewAI)',
             'release-prep': '🚀 Release Prep Report (v4.0 CrewAI)',
-            'test-coverage-boost': '📊 Test Coverage Boost (v4.0 CrewAI)',
             'security-audit': '🔒 Security Audit Report',
             'perf-audit': '⚡ Performance Audit Report',
             'bug-predict': '🐛 Bug Prediction Report',

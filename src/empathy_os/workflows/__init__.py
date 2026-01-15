@@ -85,8 +85,6 @@ from .secure_release import SecureReleasePipeline, SecureReleaseResult
 from .security_audit import SecurityAuditWorkflow
 from .step_config import WorkflowStepConfig, steps_from_tier_map, validate_step_config
 from .test5 import Test5Workflow
-from .test_coverage_boost import CoverageBoostResult, TestCoverageBoostWorkflow
-from .test_coverage_boost_crew import TestCoverageBoostCrew, TestCoverageBoostCrewResult
 from .test_gen import TestGenerationWorkflow
 
 # Re-export CLI commands from workflow_commands.py
@@ -145,9 +143,6 @@ _DEFAULT_WORKFLOWS: dict[str, type] = {
     # CrewAI-based multi-agent workflows (v4.0.0 - production ready)
     "health-check": HealthCheckCrew,  # Multi-agent health check (3-6 agents)
     "release-prep": ReleasePreparationCrew,  # Multi-agent release validation (4 agents)
-    "test-coverage-boost": TestCoverageBoostCrew,  # Intelligent coverage boost (3 agents)
-    # Backward compatibility aliases
-    "orchestrated-test-coverage": TestCoverageBoostCrew,  # Alias for test-coverage-boost (backward compat)
     # Meta-orchestration workflows (v4.0.0 - production ready with real analysis tools)
     "orchestrated-health-check": OrchestratedHealthCheckWorkflow,  # Real security/coverage/quality analysis
     "orchestrated-release-prep": OrchestratedReleasePrepWorkflow,  # Real quality gate validation
@@ -388,12 +383,7 @@ __all__ = [
     "HealthCheckCrewResult",
     "ReleasePreparationCrew",
     "ReleasePreparationCrewResult",
-    "TestCoverageBoostCrew",
-    "TestCoverageBoostCrewResult",
-    # Legacy meta-orchestration workflows (experimental)
-    "TestCoverageBoostWorkflow",
-    "CoverageBoostResult",
-    # Experimental: Meta-orchestration
+    # Meta-orchestration workflows (v4.0)
     "OrchestratedHealthCheckWorkflow",
     "OrchestratedReleasePrepWorkflow",
     "HealthCheckReport",

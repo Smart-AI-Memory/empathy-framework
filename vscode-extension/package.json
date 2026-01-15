@@ -140,11 +140,6 @@
         "icon": "$(heart)"
       },
       {
-        "command": "empathy.openCoveragePanel",
-        "title": "Empathy: Test Coverage Boost",
-        "icon": "$(target)"
-      },
-      {
         "command": "empathy.openCostsPanel",
         "title": "Empathy: Cost Metrics",
         "icon": "$(graph)"
@@ -228,7 +223,6 @@
     "keybindings": [
       {"command": "empathy.openPowerPanel", "key": "ctrl+shift+e p", "mac": "cmd+shift+e p"},
       {"command": "empathy.openHealthPanel", "key": "ctrl+shift+e 1", "mac": "cmd+shift+e 1"},
-      {"command": "empathy.openCoveragePanel", "key": "ctrl+shift+e 4", "mac": "cmd+shift+e 4"},
       {"command": "empathy.openCostsPanel", "key": "ctrl+shift+e 2", "mac": "cmd+shift+e 2"},
       {"command": "empathy.openWorkflowHistory", "key": "ctrl+shift+e 3", "mac": "cmd+shift+e 3"},
       {"command": "empathy.focusSidebarDashboard", "key": "ctrl+shift+e d", "mac": "cmd+shift+e d"},

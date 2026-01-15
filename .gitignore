@@ -154,3 +154,4 @@ fallback_test_report_*.json
 usage_analysis.json
 FALLBACK_TEST_REPORT.md
 TIER_FALLBACK_TEST_REPORT.md
+*.vsix

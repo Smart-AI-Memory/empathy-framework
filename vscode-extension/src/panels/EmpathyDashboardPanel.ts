@@ -112,17 +112,11 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 case 'openHealthPanel':
                     vscode.commands.executeCommand('empathy.openHealthPanel');
                     break;
-                case 'openCoveragePanel':
-                    vscode.commands.executeCommand('empathy.openCoveragePanel');
-                    break;
                 case 'runOrchestratedHealthCheck':
                     await this._runOrchestratedHealthCheck();
                     break;
                 case 'runOrchestratedReleasePrep':
                     await this._runOrchestratedReleasePrep();
-                    break;
-                case 'runOrchestratedTestCoverage':
-                    await this._runOrchestratedTestCoverage();
                     break;
                 case 'copyToClipboard':
                     await vscode.env.clipboard.writeText(message.content);
@@ -815,12 +809,6 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
     private async _runOrchestratedReleasePrep() {
         // Open dedicated WorkflowReportPanel for orchestrated-release-prep (v4.0.0 Meta-Orchestration)
         await vscode.commands.executeCommand('empathy.openWorkflowReport', 'orchestrated-release-prep');
-    }
-
-    private async _runOrchestratedTestCoverage() {
-        // Open dedicated CoveragePanel for test-coverage-boost (v4.0.0 CrewAI)
-        // This panel has the target input dialog
-        await vscode.commands.executeCommand('empathy.openCoveragePanel');
     }
 
     private async _runWorkflow(workflowName: string, input?: string) {
@@ -2155,10 +2143,6 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                     <span class="action-icon">&#x1F4CB;</span>
                     <span>Release Prep</span>
                 </button>
-                <button class="action-btn workflow-btn" id="btn-coverage-boost-v4" title="Intelligent test coverage boost with gap analysis and smart generation">
-                    <span class="action-icon">&#x1F3AF;</span>
-                    <span>Coverage Boost</span>
-                </button>
             </div>
 
             <!-- Release -->
@@ -2456,15 +2440,6 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 e.stopPropagation();
                 console.log('[EmpathyDashboard] Release Prep v4 clicked - running workflow');
                 vscode.postMessage({ type: 'runOrchestratedReleasePrep' });
-            });
-        }
-
-        const coverageBoostBtn = document.getElementById('btn-coverage-boost-v4');
-        if (coverageBoostBtn) {
-            coverageBoostBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                console.log('[EmpathyDashboard] Coverage Boost v4 clicked - running workflow');
-                vscode.postMessage({ type: 'runOrchestratedTestCoverage' });
             });
         }
 
@@ -2996,7 +2971,7 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 resultsStatus.innerHTML = '&#x2714; Complete';
 
                 // Check if output is crew workflow result (has verdict/quality_score)
-                const crewWorkflows = ['pro-review', 'pr-review', 'health-check', 'release-prep', 'test-coverage-boost'];
+                const crewWorkflows = ['pro-review', 'pr-review', 'health-check', 'release-prep'];
                 if (crewWorkflows.includes(data.workflow) || data.output.includes('"verdict"') || data.output.includes('"quality_score"')) {
                     try {
                         resultsContent.innerHTML = formatCrewOutput(data.output);

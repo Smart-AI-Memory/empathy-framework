@@ -22,7 +22,6 @@ import { CostsPanel } from './panels/CostsPanel';
 import { WorkflowHistoryPanel } from './panels/WorkflowHistoryPanel';
 import { TelemetryPanel } from './panels/TelemetryPanel';
 import { EmpathyDashboardProvider } from './panels/EmpathyDashboardPanel';
-import { CoveragePanel } from './panels/CoveragePanel';
 import { WorkflowFactoryPanel } from './panels/WorkflowFactoryPanel';
 import { WorkflowReportPanel } from './panels/WorkflowReportPanel';
 import { MemoryPanelProvider } from './panels/MemoryPanelProvider';
@@ -352,13 +351,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('empathy.openHealthPanel', () => {
             HealthPanel.createOrShow(context.extensionUri);
-        })
-    );
-
-    // Register Coverage Panel command (v4.0 Meta-Orchestration)
-    context.subscriptions.push(
-        vscode.commands.registerCommand('empathy.openCoveragePanel', () => {
-            CoveragePanel.createOrShow(context.extensionUri);
         })
     );
 
