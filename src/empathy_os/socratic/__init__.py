@@ -95,6 +95,37 @@ from .feedback import (
 # MCP server
 from .mcp_server import SocraticMCPServer, SOCRATIC_TOOLS
 
+# Vector embeddings for semantic matching
+from .embeddings import (
+    VectorStore,
+    SemanticGoalMatcher,
+    EmbeddingProvider,
+    TFIDFEmbeddingProvider,
+    AnthropicEmbeddingProvider,
+    EmbeddedGoal,
+    SimilarityResult,
+)
+
+# A/B testing
+from .ab_testing import (
+    ExperimentManager,
+    WorkflowABTester,
+    Experiment,
+    Variant,
+    ExperimentResult,
+    AllocationStrategy,
+)
+
+# Domain templates
+from .domain_templates import (
+    DomainTemplateRegistry,
+    Domain,
+    AgentTemplate,
+    WorkflowTemplate,
+    DomainTemplate,
+    get_registry,
+)
+
 __all__ = [
     # Core engine
     "SocraticWorkflowBuilder",
@@ -149,4 +180,26 @@ __all__ = [
     # MCP server
     "SocraticMCPServer",
     "SOCRATIC_TOOLS",
+    # Vector embeddings
+    "VectorStore",
+    "SemanticGoalMatcher",
+    "EmbeddingProvider",
+    "TFIDFEmbeddingProvider",
+    "AnthropicEmbeddingProvider",
+    "EmbeddedGoal",
+    "SimilarityResult",
+    # A/B testing
+    "ExperimentManager",
+    "WorkflowABTester",
+    "Experiment",
+    "Variant",
+    "ExperimentResult",
+    "AllocationStrategy",
+    # Domain templates
+    "DomainTemplateRegistry",
+    "Domain",
+    "AgentTemplate",
+    "WorkflowTemplate",
+    "DomainTemplate",
+    "get_registry",
 ]
