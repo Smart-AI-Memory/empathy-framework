@@ -206,6 +206,9 @@ class TestGenerator:
             Generated integration test code
 
         """
+        # Build step completion code based on wizard pattern
+        step_completion_code = self._build_step_completion_code(context)
+
         # For now, return a simple integration test template
         # In full implementation, would use integration_test.py.jinja2
         return f'''"""Integration tests for {context["wizard_id"]} wizard.
@@ -234,11 +237,55 @@ class TestIntegration{context["wizard_class"]}:
         wizard_id = session["wizard_id"]
 
         # Complete all steps with valid data
-        # TODO: Add step completion logic
+{step_completion_code}
 
         # Verify final state
         assert session.get("completed", False) is True
 '''
+
+    def _build_step_completion_code(self, context: dict) -> str:
+        """Build step completion code based on wizard pattern.
+
+        Args:
+            context: Template context containing pattern info
+
+        Returns:
+            Generated step completion code as indented string
+
+        """
+        indent = "        "  # 8 spaces for method body indentation
+
+        if context.get("has_linear_flow") and context.get("total_steps"):
+            # Linear flow wizard - iterate through numbered steps
+            total_steps = context["total_steps"]
+            lines = [
+                f"{indent}# Linear flow wizard with {total_steps} steps",
+                f"{indent}for step_num in range(1, {total_steps + 1}):",
+                f"{indent}    step_data = {{\"step\": step_num, \"data\": f\"test_value_{{step_num}}\"}}",
+                f"{indent}    session = await wizard.submit_step(wizard_id, step_num, step_data)",
+                f"{indent}    assert session.get(\"current_step\") == step_num + 1 or session.get(\"completed\")",
+            ]
+            return "\n".join(lines)
+
+        elif context.get("has_phased") and context.get("phases"):
+            # Phased processing wizard - iterate through named phases
+            phases = context["phases"]
+            lines = [f"{indent}# Phased processing wizard"]
+            for phase in phases:
+                phase_name = phase if isinstance(phase, str) else phase.get("name", "unknown")
+                lines.append(f"{indent}# Phase: {phase_name}")
+                lines.append(f'{indent}session = await wizard.complete_phase(wizard_id, "{phase_name}", {{}})')
+                lines.append(f'{indent}assert "{phase_name}" in session.get("completed_phases", [])')
+            return "\n".join(lines)
+
+        else:
+            # Generic wizard - single completion call
+            lines = [
+                f"{indent}# Complete wizard with test data",
+                f'{indent}completion_data = {{"action": "complete", "data": {{}}}}',
+                f"{indent}session = await wizard.complete(wizard_id, completion_data)",
+            ]
+            return "\n".join(lines)
 
     def _generate_fixtures(self, context: dict) -> str:
         """Generate test fixtures.
