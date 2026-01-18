@@ -14,124 +14,23 @@ Copyright 2025 Smart-AI-Memory
 Licensed under Fair Source License 0.9
 """
 
-import sqlite3
-from pathlib import Path
-from typing import Any
+import time
 
 import click
 
-
-class AlertEngine:
-    """Alert engine with SQLite storage"""
-
-    def __init__(self, db_path: str = ".empathy/alerts.db"):
-        self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_db()
-
-    def _init_db(self) -> None:
-        """Initialize SQLite database"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS alerts (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                metric TEXT NOT NULL,
-                threshold REAL NOT NULL,
-                channel TEXT NOT NULL,
-                webhook_url TEXT,
-                email TEXT,
-                enabled INTEGER DEFAULT 1,
-                cooldown INTEGER DEFAULT 3600,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """
-        )
-
-        conn.commit()
-        conn.close()
-
-    def add_alert(
-        self,
-        alert_id: str,
-        name: str,
-        metric: str,
-        threshold: float,
-        channel: str,
-        webhook_url: str | None = None,
-        email: str | None = None,
-    ) -> None:
-        """Add a new alert"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            INSERT INTO alerts (id, name, metric, threshold, channel, webhook_url, email)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-            (alert_id, name, metric, threshold, channel, webhook_url, email),
-        )
-
-        conn.commit()
-        conn.close()
-
-    def list_alerts(self) -> list[dict[str, Any]]:
-        """List all alerts"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM alerts")
-        rows = cursor.fetchall()
-
-        conn.close()
-
-        alerts = []
-        for row in rows:
-            alerts.append(
-                {
-                    "id": row[0],
-                    "name": row[1],
-                    "metric": row[2],
-                    "threshold": row[3],
-                    "channel": row[4],
-                    "webhook_url": row[5],
-                    "email": row[6],
-                    "enabled": bool(row[7]),
-                    "cooldown": row[8],
-                    "created_at": row[9],
-                }
-            )
-
-        return alerts
-
-    def delete_alert(self, alert_id: str) -> bool:
-        """Delete an alert by ID"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM alerts WHERE id = ?", (alert_id,))
-        deleted = cursor.rowcount > 0
-
-        conn.commit()
-        conn.close()
-
-        return deleted
+from empathy_os.monitoring.alerts import AlertEngine
 
 
 @click.group()
-def alerts():
-    """Alert management commands"""
+def alerts() -> None:
+    """Alert management commands."""
     pass
 
 
 @alerts.command()
-def init():
-    """Initialize alert with interactive wizard"""
-    click.echo("🔔 Alert Setup Wizard\n")
+def init() -> None:
+    """Initialize alert with interactive wizard."""
+    click.echo("Alert Setup Wizard\n")
 
     # Question 1: What metric?
     click.echo("1. What metric do you want to monitor?")
@@ -188,7 +87,7 @@ def init():
 
     # Create alert
     engine = AlertEngine()
-    alert_id = f"alert_{metric}_{int(__import__('time').time())}"
+    alert_id = f"alert_{metric}_{int(time.time())}"
 
     engine.add_alert(
         alert_id=alert_id,
@@ -200,18 +99,18 @@ def init():
         email=email,
     )
 
-    click.echo("\n✅ Alert created successfully!")
+    click.echo("\nAlert created successfully!")
     click.echo(f"   ID: {alert_id}")
     click.echo(f"   Metric: {metric_name}")
     click.echo(f"   Threshold: {threshold}")
     click.echo(f"   Channel: {channel}")
 
-    click.echo("\n💡 Tip: Run 'empathy alerts watch' to start monitoring")
+    click.echo("\nTip: Run 'empathy alerts watch' to start monitoring")
 
 
 @alerts.command(name="list")
-def list_cmd():
-    """List all configured alerts"""
+def list_cmd() -> None:
+    """List all configured alerts."""
     engine = AlertEngine()
     alerts_list = engine.list_alerts()
 
@@ -219,10 +118,10 @@ def list_cmd():
         click.echo("No alerts configured. Run 'empathy alerts init' to create one.")
         return
 
-    click.echo("📋 Configured Alerts:\n")
+    click.echo("Configured Alerts:\n")
 
     for alert in alerts_list:
-        status = "✓ Enabled" if alert["enabled"] else "✗ Disabled"
+        status = "Enabled" if alert["enabled"] else "Disabled"
         click.echo(f"  [{status}] {alert['name']}")
         click.echo(f"    ID: {alert['id']}")
         click.echo(f"    Metric: {alert['metric']} > {alert['threshold']}")
@@ -232,36 +131,132 @@ def list_cmd():
 
 @alerts.command()
 @click.argument("alert_id")
-def delete(alert_id: str):
-    """Delete an alert by ID"""
+def delete(alert_id: str) -> None:
+    """Delete an alert by ID."""
     engine = AlertEngine()
     deleted = engine.delete_alert(alert_id)
 
     if deleted:
-        click.echo(f"✅ Alert '{alert_id}' deleted successfully")
+        click.echo(f"Alert '{alert_id}' deleted successfully")
     else:
-        click.echo(f"❌ Alert '{alert_id}' not found")
+        click.echo(f"Alert '{alert_id}' not found")
+
+
+@alerts.command()
+@click.argument("alert_id")
+def get(alert_id: str) -> None:
+    """Get details of a specific alert."""
+    engine = AlertEngine()
+    alert = engine.get_alert(alert_id)
+
+    if alert is None:
+        click.echo(f"Alert '{alert_id}' not found")
+        return
+
+    status = "Enabled" if alert["enabled"] else "Disabled"
+    click.echo(f"Alert: {alert['name']}")
+    click.echo(f"  ID: {alert['id']}")
+    click.echo(f"  Status: {status}")
+    click.echo(f"  Metric: {alert['metric']}")
+    click.echo(f"  Threshold: {alert['threshold']}")
+    click.echo(f"  Channel: {alert['channel']}")
+    if alert["webhook_url"]:
+        click.echo(f"  Webhook URL: {alert['webhook_url']}")
+    if alert["email"]:
+        click.echo(f"  Email: {alert['email']}")
+    click.echo(f"  Cooldown: {alert['cooldown']} seconds")
+    click.echo(f"  Created: {alert['created_at']}")
+
+
+@alerts.command()
+@click.argument("alert_id")
+def enable(alert_id: str) -> None:
+    """Enable an alert."""
+    engine = AlertEngine()
+    updated = engine.enable_alert(alert_id, enabled=True)
+
+    if updated:
+        click.echo(f"Alert '{alert_id}' enabled")
+    else:
+        click.echo(f"Alert '{alert_id}' not found")
+
+
+@alerts.command()
+@click.argument("alert_id")
+def disable(alert_id: str) -> None:
+    """Disable an alert."""
+    engine = AlertEngine()
+    updated = engine.enable_alert(alert_id, enabled=False)
+
+    if updated:
+        click.echo(f"Alert '{alert_id}' disabled")
+    else:
+        click.echo(f"Alert '{alert_id}' not found")
+
+
+@alerts.command()
+def check() -> None:
+    """Check alerts once and report status."""
+    engine = AlertEngine()
+    results = engine.check_alerts()
+
+    if not results:
+        click.echo("No alerts configured. Run 'empathy alerts init' to create one.")
+        return
+
+    click.echo("Alert Check Results:\n")
+
+    triggered_count = 0
+    for result in results:
+        if result.triggered:
+            triggered_count += 1
+            status = "TRIGGERED"
+            if result.notification_sent:
+                status += " (notification sent)"
+            elif result.notification_error:
+                status += f" (notification failed: {result.notification_error})"
+        else:
+            status = "OK"
+
+        click.echo(f"  [{status}] {result.alert_name}")
+        click.echo(f"    {result.metric}: {result.current_value:.2f} (threshold: {result.threshold})")
+        click.echo()
+
+    click.echo(f"Summary: {triggered_count}/{len(results)} alerts triggered")
 
 
 @alerts.command()
 @click.option("--daemon", is_flag=True, help="Run as background daemon (enterprise)")
-def watch(daemon: bool):
-    """Watch telemetry and trigger alerts"""
+@click.option("--interval", default=60, help="Check interval in seconds")
+def watch(daemon: bool, interval: int) -> None:
+    """Watch telemetry and trigger alerts."""
     if daemon:
-        click.echo("🔄 Starting alert watcher as daemon...")
-        click.echo("⚠️  Note: Daemon mode is an enterprise feature for 24/7 monitoring")
+        click.echo("Starting alert watcher as daemon...")
+        click.echo("Note: Daemon mode is an enterprise feature for 24/7 monitoring")
         click.echo("   For development, use VSCode extension polling instead.")
-        # TODO: Implement daemon mode
+        # TODO: Implement daemon mode with proper process management
     else:
-        click.echo("🔄 Starting alert watcher (Ctrl+C to stop)...")
-        click.echo("💡 Tip: Use VSCode extension for automatic monitoring")
+        click.echo(f"Starting alert watcher (checking every {interval}s, Ctrl+C to stop)...")
+        click.echo("Tip: Use VSCode extension for automatic monitoring")
+
+        engine = AlertEngine()
 
         try:
             while True:
-                # TODO: Check telemetry and trigger alerts
-                __import__("time").sleep(60)
+                results = engine.check_alerts()
+                triggered = [r for r in results if r.triggered]
+
+                if triggered:
+                    click.echo(f"\n[{time.strftime('%H:%M:%S')}] {len(triggered)} alert(s) triggered:")
+                    for result in triggered:
+                        click.echo(f"  - {result.alert_name}: {result.metric}={result.current_value:.2f}")
+                else:
+                    click.echo(f"[{time.strftime('%H:%M:%S')}] All alerts OK", nl=False)
+                    click.echo("\r", nl=False)
+
+                time.sleep(interval)
         except KeyboardInterrupt:
-            click.echo("\n✓ Alert watcher stopped")
+            click.echo("\nAlert watcher stopped")
 
 
 if __name__ == "__main__":
