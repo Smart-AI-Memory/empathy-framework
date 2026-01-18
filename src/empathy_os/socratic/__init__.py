@@ -126,6 +126,45 @@ from .domain_templates import (
     get_registry,
 )
 
+# Visual editor
+from .visual_editor import (
+    VisualWorkflowEditor,
+    ASCIIVisualizer,
+    WorkflowVisualizer,
+    EditorState,
+    EditorNode,
+    EditorEdge,
+    generate_react_flow_schema,
+    generate_editor_html,
+)
+
+# Workflow explainer
+from .explainer import (
+    WorkflowExplainer,
+    LLMExplanationGenerator,
+    Explanation,
+    AudienceLevel,
+    DetailLevel,
+    OutputFormat,
+    explain_workflow,
+)
+
+# Collaboration
+from .collaboration import (
+    CollaborationManager,
+    CollaborativeSession,
+    Participant,
+    ParticipantRole,
+    Comment,
+    Vote,
+    VoteType,
+    Change,
+    ChangeType,
+    VotingResult,
+    InvitationManager,
+    SyncAdapter,
+)
+
 __all__ = [
     # Core engine
     "SocraticWorkflowBuilder",
@@ -202,4 +241,34 @@ __all__ = [
     "WorkflowTemplate",
     "DomainTemplate",
     "get_registry",
+    # Visual editor
+    "VisualWorkflowEditor",
+    "ASCIIVisualizer",
+    "WorkflowVisualizer",
+    "EditorState",
+    "EditorNode",
+    "EditorEdge",
+    "generate_react_flow_schema",
+    "generate_editor_html",
+    # Workflow explainer
+    "WorkflowExplainer",
+    "LLMExplanationGenerator",
+    "Explanation",
+    "AudienceLevel",
+    "DetailLevel",
+    "OutputFormat",
+    "explain_workflow",
+    # Collaboration
+    "CollaborationManager",
+    "CollaborativeSession",
+    "Participant",
+    "ParticipantRole",
+    "Comment",
+    "Vote",
+    "VoteType",
+    "Change",
+    "ChangeType",
+    "VotingResult",
+    "InvitationManager",
+    "SyncAdapter",
 ]
