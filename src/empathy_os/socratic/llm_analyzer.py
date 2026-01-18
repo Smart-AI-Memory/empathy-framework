@@ -181,6 +181,13 @@ class LLMAnalysisResult:
     suggested_agents: list[str]
     suggested_questions: list[dict[str, Any]]
     raw_response: str = ""
+    secondary_domains: list[str] = field(default_factory=list)
+    detected_requirements: list[str] = field(default_factory=list)
+
+    @property
+    def primary_domain(self) -> str:
+        """Alias for domain (for MCP server compatibility)."""
+        return self.domain
 
 
 @dataclass
@@ -206,30 +213,56 @@ class LLMAgentRecommendation:
 class LLMGoalAnalyzer:
     """Uses LLM to analyze goals and generate questions.
 
+    Supports two modes:
+    1. Direct Anthropic API (preferred when api_key is provided)
+    2. EmpathyLLMExecutor integration (fallback)
+
     Example:
-        >>> analyzer = LLMGoalAnalyzer()
+        >>> analyzer = LLMGoalAnalyzer(api_key="sk-...")
         >>> result = await analyzer.analyze_goal("I want to automate code reviews")
         >>> print(result.domain)  # "code_review"
         >>> print(result.suggested_questions)
     """
 
+    # Model selection by tier
+    MODELS = {
+        "cheap": "claude-3-5-haiku-20241022",
+        "capable": "claude-sonnet-4-5-20250514",
+        "premium": "claude-opus-4-5-20251101",
+    }
+
     def __init__(
         self,
+        api_key: str | None = None,
         provider: str = "anthropic",
         model_tier: str = "capable",
     ):
         """Initialize the analyzer.
 
         Args:
-            provider: LLM provider to use
+            api_key: Anthropic API key (enables direct API access)
+            provider: LLM provider to use (for executor mode)
             model_tier: Model tier (cheap, capable, premium)
         """
+        import os
+        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self.provider = provider
         self.model_tier = model_tier
+        self._client = None
         self._executor = None
 
+    def _get_client(self):
+        """Lazy-load the Anthropic client for direct API access."""
+        if self._client is None and self.api_key:
+            try:
+                import anthropic
+                self._client = anthropic.Anthropic(api_key=self.api_key)
+            except ImportError:
+                logger.warning("anthropic package not installed")
+        return self._client
+
     async def _get_executor(self):
-        """Get or create LLM executor."""
+        """Get or create LLM executor (fallback mode)."""
         if self._executor is None:
             try:
                 from ..models.empathy_executor import EmpathyLLMExecutor
@@ -238,6 +271,46 @@ class LLMGoalAnalyzer:
                 logger.warning("EmpathyLLMExecutor not available, using mock")
                 self._executor = MockLLMExecutor()
         return self._executor
+
+    async def _call_llm(
+        self,
+        prompt: str,
+        system: str,
+        max_tokens: int = 2000,
+    ) -> str:
+        """Call LLM using direct API or executor.
+
+        Args:
+            prompt: User prompt
+            system: System prompt
+            max_tokens: Maximum tokens in response
+
+        Returns:
+            Response content as string
+        """
+        # Try direct Anthropic API first (preferred)
+        client = self._get_client()
+        if client:
+            try:
+                model = self.MODELS.get(self.model_tier, self.MODELS["capable"])
+                response = client.messages.create(
+                    model=model,
+                    max_tokens=max_tokens,
+                    system=system,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return response.content[0].text if response.content else "{}"
+            except Exception as e:
+                logger.warning(f"Direct API call failed: {e}")
+
+        # Fall back to executor
+        executor = await self._get_executor()
+        response = await executor.run(
+            task_type="analysis",
+            prompt=prompt,
+            system=system,
+        )
+        return response.content if hasattr(response, 'content') else str(response)
 
     async def analyze_goal(self, goal: str) -> LLMAnalysisResult:
         """Analyze a goal using LLM.
@@ -249,17 +322,10 @@ class LLMGoalAnalyzer:
             LLMAnalysisResult with structured analysis
         """
         prompt = GOAL_ANALYSIS_PROMPT.format(goal=goal)
+        system = "You are an expert requirements analyst. Respond only with valid JSON."
 
         try:
-            executor = await self._get_executor()
-            response = await executor.run(
-                task_type="analysis",
-                prompt=prompt,
-                system="You are an expert requirements analyst. Respond only with valid JSON.",
-            )
-
-            # Parse JSON response
-            content = response.content if hasattr(response, 'content') else str(response)
+            content = await self._call_llm(prompt, system)
             data = self._parse_json_response(content)
 
             return LLMAnalysisResult(
@@ -312,16 +378,10 @@ class LLMGoalAnalyzer:
             requirements=json.dumps(requirements, indent=2),
             ambiguities=json.dumps(ambiguities, indent=2),
         )
+        system = "You are an expert at gathering requirements. Respond only with valid JSON."
 
         try:
-            executor = await self._get_executor()
-            response = await executor.run(
-                task_type="analysis",
-                prompt=prompt,
-                system="You are an expert at gathering requirements. Respond only with valid JSON.",
-            )
-
-            content = response.content if hasattr(response, 'content') else str(response)
+            content = await self._call_llm(prompt, system)
             data = self._parse_json_response(content)
 
             return LLMQuestionResult(
@@ -364,16 +424,10 @@ class LLMGoalAnalyzer:
             goal=session.goal,
             requirements=json.dumps(requirements, indent=2),
         )
+        system = "You are an expert at designing agent workflows. Respond only with valid JSON."
 
         try:
-            executor = await self._get_executor()
-            response = await executor.run(
-                task_type="planning",
-                prompt=prompt,
-                system="You are an expert at designing agent workflows. Respond only with valid JSON.",
-            )
-
-            content = response.content if hasattr(response, 'content') else str(response)
+            content = await self._call_llm(prompt, system)
             data = self._parse_json_response(content)
 
             return LLMAgentRecommendation(

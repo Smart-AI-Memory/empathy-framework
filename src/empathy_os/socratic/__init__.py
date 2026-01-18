@@ -92,6 +92,9 @@ from .feedback import (
     WorkflowPattern,
 )
 
+# MCP server
+from .mcp_server import SocraticMCPServer, SOCRATIC_TOOLS
+
 __all__ = [
     # Core engine
     "SocraticWorkflowBuilder",
@@ -143,4 +146,7 @@ __all__ = [
     "AdaptiveAgentGenerator",
     "AgentPerformance",
     "WorkflowPattern",
+    # MCP server
+    "SocraticMCPServer",
+    "SOCRATIC_TOOLS",
 ]
