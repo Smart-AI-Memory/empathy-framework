@@ -131,7 +131,7 @@ jobs:
         echo "Found $DEBT_COUNT tech debt markers"
 
         # Warn if above threshold (configurable)
-        THRESHOLD=400
+        THRESHOLD=200
         if [ "$DEBT_COUNT" -gt "$THRESHOLD" ]; then
           echo "::warning::Tech debt count ($DEBT_COUNT) exceeds threshold ($THRESHOLD)"
         fi

@@ -245,23 +245,49 @@ def delete(alert_id: str):
 
 @alerts.command()
 @click.option("--daemon", is_flag=True, help="Run as background daemon (enterprise)")
-def watch(daemon: bool):
+@click.option("--interval", default=60, help="Check interval in seconds (default: 60)")
+def watch(daemon: bool, interval: int):
     """Watch telemetry and trigger alerts"""
+    from empathy_os.monitoring.alerts import AlertEngine, get_current_metrics
+
+    engine = AlertEngine()
+
     if daemon:
         click.echo("🔄 Starting alert watcher as daemon...")
         click.echo("⚠️  Note: Daemon mode is an enterprise feature for 24/7 monitoring")
         click.echo("   For development, use VSCode extension polling instead.")
-        # TODO: Implement daemon mode
-    else:
-        click.echo("🔄 Starting alert watcher (Ctrl+C to stop)...")
-        click.echo("💡 Tip: Use VSCode extension for automatic monitoring")
+        # Daemon mode would fork to background - not implemented for CLI
+        click.echo("   Running in foreground mode instead...")
 
-        try:
-            while True:
-                # TODO: Check telemetry and trigger alerts
-                __import__("time").sleep(60)
-        except KeyboardInterrupt:
-            click.echo("\n✓ Alert watcher stopped")
+    click.echo(f"🔄 Starting alert watcher (checking every {interval}s, Ctrl+C to stop)...")
+    click.echo("💡 Tip: Use VSCode extension for automatic monitoring")
+
+    alerts_list = engine.get_alerts()
+    if not alerts_list:
+        click.echo("⚠️  No alerts configured. Run 'empathy alerts init' first.")
+        return
+
+    click.echo(f"   Monitoring {len(alerts_list)} alert(s)")
+
+    try:
+        check_count = 0
+        while True:
+            check_count += 1
+            metrics = get_current_metrics()
+
+            if metrics:
+                triggered = engine.check_and_notify(metrics)
+                if triggered:
+                    for event in triggered:
+                        click.echo(f"🚨 Triggered: {event.alert.name}")
+                else:
+                    # Only show status every 5 checks to reduce noise
+                    if check_count % 5 == 0:
+                        click.echo(f"   ✓ Check #{check_count}: All metrics within thresholds")
+
+            __import__("time").sleep(interval)
+    except KeyboardInterrupt:
+        click.echo(f"\n✓ Alert watcher stopped after {check_count} checks")
 
 
 if __name__ == "__main__":

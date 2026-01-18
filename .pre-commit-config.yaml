@@ -36,16 +36,19 @@ repos:
         # Prevents bare except clauses from being committed
         # See docs/EXCEPTION_HANDLING_GUIDE.md for best practices
 
-  # MyPy - Static type checking (temporarily disabled)
-  # Note: 75 type annotation issues found - all non-critical, functionality unaffected
-  # Re-enable after type hints improvement sprint
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.15.0
-  #   hooks:
-  #     - id: mypy
-  #       additional_dependencies: [types-pyyaml, types-requests]
-  #       args: ['--ignore-missing-imports', '--no-strict-optional']
-  #       files: ^(src|empathy_software_plugin|empathy_llm_toolkit|coach_wizards)/
+  # MyPy - Static type checking (incremental enablement)
+  # Phase 1: Core modules only (config, workflows/base, memory)
+  # Run manually: pre-commit run mypy --all-files
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        name: mypy (core modules)
+        additional_dependencies: [types-pyyaml, types-requests]
+        args: ['--ignore-missing-imports', '--no-strict-optional', '--no-error-summary']
+        # Phase 1: Start with critical modules only
+        files: ^src/empathy_os/(config\.py|workflows/base\.py|memory/unified\.py)$
+        stages: [manual]  # Non-blocking - run with: pre-commit run mypy
 
   # Bandit - Security linter
   - repo: https://github.com/PyCQA/bandit

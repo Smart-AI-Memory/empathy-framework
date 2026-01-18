@@ -59,9 +59,9 @@ This workflow does not use configuration files.
 
 **Tier:** CAPABLE
 
-**Purpose:** TODO: Add description
-**Input:** TODO: Add description
-**Output:** TODO: Add description
+**Purpose:** Create and manage various document types using AI assistance
+**Input:** Document requirements, templates, or content to process
+**Output:** Generated or updated documentation
 
 ---
 
@@ -96,7 +96,9 @@ pytest tests/unit/workflows/test_document_manager.py::TestDocumentManagerWorkflo
 ```python
 workflow = DocumentManagerWorkflow()
 result = await workflow.execute(
-    # TODO: Add example input
+    document_type="readme",
+    project_name="my-project",
+    description="A Python CLI tool"
 )
 ```
 
@@ -104,9 +106,11 @@ result = await workflow.execute(
 
 ```python
 workflow = DocumentManagerWorkflow(
+    style_guide="google"
 )
 result = await workflow.execute(
-    # TODO: Add example input
+    document_type="api_reference",
+    module="empathy_os.workflows"
 )
 ```
 
@@ -117,7 +121,7 @@ result = await workflow.execute(
 ### Common Issues
 
 **Issue:** Workflow fails with "X not found"
-**Solution:** TODO: Add solution
+**Solution:** Ensure all required dependencies are installed with `pip install empathy-framework[docs]`
 
 **Issue:** High costs
 **Solution:** Consider adding conditional tier routing
@@ -125,7 +129,8 @@ result = await workflow.execute(
 
 ## Related Workflows
 
-- TODO: Add related workflows
+- `doc-gen` - Document generation workflow
+- `manage-docs` - Documentation management workflow
 
 ---
 

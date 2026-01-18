@@ -59,9 +59,9 @@ This workflow does not use configuration files.
 
 **Tier:** CAPABLE
 
-**Purpose:** TODO: Add description
-**Input:** TODO: Add description
-**Output:** TODO: Add description
+**Purpose:** Process documentation tasks using LLM capabilities
+**Input:** Documentation content, instructions, or context to process
+**Output:** Processed documentation or generated content
 
 ---
 
@@ -96,7 +96,8 @@ pytest tests/unit/workflows/test_manage_docs.py::TestManageDocsWorkflow::test_wo
 ```python
 workflow = ManageDocsWorkflow()
 result = await workflow.execute(
-    # TODO: Add example input
+    content="Update the API documentation for the new endpoint",
+    format="markdown"
 )
 ```
 
@@ -104,9 +105,11 @@ result = await workflow.execute(
 
 ```python
 workflow = ManageDocsWorkflow(
+    max_retries=3
 )
 result = await workflow.execute(
-    # TODO: Add example input
+    content="Generate docstrings for the following code",
+    style="google"
 )
 ```
 
@@ -117,7 +120,7 @@ result = await workflow.execute(
 ### Common Issues
 
 **Issue:** Workflow fails with "X not found"
-**Solution:** TODO: Add solution
+**Solution:** Ensure the workflow is properly registered in pyproject.toml entry points
 
 **Issue:** High costs
 **Solution:** Consider adding conditional tier routing
@@ -125,7 +128,8 @@ result = await workflow.execute(
 
 ## Related Workflows
 
-- TODO: Add related workflows
+- `doc-gen` - Document generation workflow
+- `code-review` - Code review workflow
 
 ---
 

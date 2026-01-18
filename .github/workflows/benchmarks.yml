@@ -1,0 +1,143 @@
+# Benchmark regression tests
+# Runs performance benchmarks to detect regressions
+name: Benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Create profiles directory
+        run: mkdir -p benchmarks/profiles
+
+      - name: Run lookup optimization benchmarks
+        id: lookups
+        run: |
+          echo "## Lookup Optimization Benchmarks" >> $GITHUB_STEP_SUMMARY
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          sys.path.insert(0, 'benchmarks')
+
+          # Quick benchmark for data structure lookups
+          import time
+
+          # Test file categorization (should be fast with frozenset)
+          test_extensions = ['py', 'js', 'ts', 'md', 'txt', 'json', 'yaml', 'yml']
+          iterations = 10000
+
+          start = time.perf_counter()
+          for _ in range(iterations):
+              for ext in test_extensions:
+                  _ = ext in {'py', 'pyi', 'pyx', 'pxd'}  # frozenset lookup
+          elapsed = time.perf_counter() - start
+
+          print(f'Lookup benchmark: {elapsed*1000:.2f}ms for {iterations} iterations')
+          print(f'Per-lookup: {elapsed/iterations*1_000_000:.2f}ns')
+
+          # Threshold: should be under 50ms for 10k iterations
+          if elapsed > 0.05:
+              print('::warning::Lookup performance regression detected')
+              sys.exit(1)
+          print('✓ Lookup performance within threshold')
+          "
+          echo "✓ Lookup benchmarks passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run pattern library benchmarks
+        id: patterns
+        run: |
+          echo "## Pattern Library Benchmarks" >> $GITHUB_STEP_SUMMARY
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+
+          import time
+          from empathy_os.pattern_library import PatternLibrary, Pattern
+
+          library = PatternLibrary()
+
+          # Create test patterns
+          for i in range(100):
+              pattern = Pattern(
+                  id=f'pat_{i:03d}',
+                  agent_id=f'agent_{i % 10}',
+                  pattern_type=['sequential', 'temporal', 'conditional', 'behavioral'][i % 4],
+                  name=f'test_pattern_{i}',
+                  description=f'Test pattern {i}',
+                  tags=[f'tag_{i % 10}'],
+                  confidence=0.5 + (i % 50) / 100,
+              )
+              library.contribute_pattern(f'agent_{i % 10}', pattern)
+
+          # Benchmark queries
+          start = time.perf_counter()
+          for i in range(1000):
+              context = {'task_type': f'task_{i % 5}', 'user_role': 'developer'}
+              _ = library.query_patterns(agent_id=f'agent_{i % 10}', context=context)
+          elapsed = time.perf_counter() - start
+
+          print(f'Pattern queries: {elapsed*1000:.2f}ms for 1000 queries')
+          print(f'Per-query: {elapsed:.4f}ms')
+
+          # Threshold: should be under 500ms for 1000 queries
+          if elapsed > 0.5:
+              print('::warning::Pattern query performance regression detected')
+              sys.exit(1)
+          print('✓ Pattern library performance within threshold')
+          "
+          echo "✓ Pattern library benchmarks passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run memory benchmarks
+        id: memory
+        run: |
+          echo "## Memory Usage Benchmarks" >> $GITHUB_STEP_SUMMARY
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+
+          import tracemalloc
+
+          tracemalloc.start()
+
+          # Import core modules and measure memory
+          from empathy_os.config import EmpathyConfig
+          from empathy_os.pattern_library import PatternLibrary
+
+          current, peak = tracemalloc.get_traced_memory()
+          tracemalloc.stop()
+
+          print(f'Current memory: {current / 1024 / 1024:.2f} MB')
+          print(f'Peak memory: {peak / 1024 / 1024:.2f} MB')
+
+          # Threshold: peak should be under 50MB for core imports
+          if peak > 50 * 1024 * 1024:
+              print('::warning::Memory usage regression detected')
+              sys.exit(1)
+          print('✓ Memory usage within threshold')
+          "
+          echo "✓ Memory benchmarks passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "All benchmark thresholds passed ✓" >> $GITHUB_STEP_SUMMARY

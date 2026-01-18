@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "empathy-framework"
-version = "4.0.1"
+version = "4.2.0"
 description = "AI collaboration framework with intelligent caching (up to 85% cache hit rate), tier routing (34-86% cost savings), performance optimizations (46% faster scans, 3-5x faster lookups), XML-enhanced prompts, persistent memory, CrewAI integration, and multi-agent orchestration. Includes HIPAA-compliant healthcare wizards."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
@@ -65,13 +65,12 @@ dependencies = [
 # LLM providers (user chooses which they need)
 anthropic = ["anthropic>=0.25.0,<1.0.0"]
 openai = ["openai>=1.12.0,<2.0.0"]
-# Note: google-generativeai is deprecated but still works; google-genai requires
-# tenacity>=9.1.2 (now compatible with langchain>=0.3.0). Ready to migrate.
-google = ["google-generativeai>=0.3.0,<1.0.0"]
+# Updated to google-genai (google-generativeai is deprecated)
+google = ["google-genai>=1.0.0,<2.0.0"]
 llm = [
     "anthropic>=0.25.0,<1.0.0",
     "openai>=1.12.0,<2.0.0",
-    "google-generativeai>=0.3.0,<1.0.0",
+    "google-genai>=1.0.0,<2.0.0",
 ]
 
 # MemDocs integration for long-term memory
@@ -108,7 +107,7 @@ healthcare = [
     # Everything in enterprise
     "anthropic>=0.25.0,<1.0.0",
     "openai>=1.12.0,<2.0.0",
-    "google-generativeai>=0.3.0,<1.0.0",
+    "google-genai>=1.0.0,<2.0.0",
     "memdocs>=1.0.0",
     "langchain>=1.0.0,<2.0.0",
     "langchain-core>=1.2.5,<2.0.0",
@@ -177,6 +176,7 @@ dev = [
     "pytest>=7.0,<9.0",
     "pytest-asyncio>=0.21,<1.0",
     "pytest-cov>=4.0,<5.0",
+    "pytest-xdist>=3.5,<4.0",  # Parallel test execution
     "black>=24.3.0,<26.0",  # CVE fix: PYSEC-2024-48
     "mypy>=1.0,<2.0",
     "ruff>=0.1,<1.0",
@@ -193,7 +193,7 @@ developer = [
     # LLM providers
     "anthropic>=0.25.0,<1.0.0",
     "openai>=1.12.0,<2.0.0",
-    "google-generativeai>=0.3.0,<1.0.0",
+    "google-genai>=1.0.0,<2.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
     # Agents (updated for security fixes)
@@ -213,7 +213,7 @@ enterprise = [
     # Everything in developer
     "anthropic>=0.25.0,<1.0.0",
     "openai>=1.12.0,<2.0.0",
-    "google-generativeai>=0.3.0,<1.0.0",
+    "google-genai>=1.0.0,<2.0.0",
     "memdocs>=1.0.0",
     "langchain>=1.0.0,<2.0.0",
     "langchain-core>=1.2.5,<2.0.0",
@@ -240,7 +240,7 @@ full = [
     # LLM providers
     "anthropic>=0.25.0,<1.0.0",
     "openai>=1.12.0,<2.0.0",
-    "google-generativeai>=0.3.0,<1.0.0",
+    "google-genai>=1.0.0,<2.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
     # Agents (updated for security fixes)
@@ -260,7 +260,7 @@ all = [
     # LLM providers
     "anthropic>=0.25.0,<1.0.0",
     "openai>=1.12.0,<2.0.0",
-    "google-generativeai>=0.3.0,<1.0.0",
+    "google-genai>=1.0.0,<2.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
     # Agents (updated for security fixes)
@@ -394,7 +394,6 @@ exclude = [
     "dashboard/",  # Dashboard code
     "deployments/",  # Deployment scripts
     ".archive/",  # Archived files
-    "src/empathy_os/workflows/new_sample_workflow1.py",  # Test workflow
     "src/empathy_os/workflows/test5.py",  # Test workflow
     "benchmarks/",  # Benchmark and test scripts
     "scaffolding/",  # Development scaffolding code
@@ -519,7 +518,7 @@ addopts = [
     "--cov-report=html",
     "--cov-report=term-missing",
     "--cov-report=xml",
-    "--cov-fail-under=55",
+    "--cov-fail-under=60",
     "--asyncio-mode=auto",
 ]
 markers = [
@@ -552,7 +551,7 @@ precision = 2
 show_missing = true
 skip_covered = false
 # Coverage threshold - increase as tests improve (target: 75%)
-fail_under = 53
+fail_under = 60
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",

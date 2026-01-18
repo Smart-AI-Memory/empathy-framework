@@ -1,37 +1,36 @@
-# Dependabot configuration
-# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
 
 version: 2
 updates:
-  # Python dependencies
+  # Python dependencies (PyPI)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
-    groups:
-      dev-dependencies:
-        patterns:
-          - "pytest*"
-          - "black"
-          - "ruff"
-          - "mypy"
-          - "coverage"
-          - "bandit"
-          - "pre-commit"
-      llm-providers:
-        patterns:
-          - "anthropic"
-          - "openai"
-      web-frameworks:
-        patterns:
-          - "fastapi"
-          - "uvicorn"
-          - "starlette"
     labels:
       - "dependencies"
       - "python"
+    commit-message:
+      prefix: "deps"
+    groups:
+      # Group minor/patch updates together
+      python-minor:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ignore major version bumps for core deps (review manually)
+      - dependency-name: "pydantic"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "anthropic"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "langchain*"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -42,13 +41,10 @@ updates:
     open-pull-requests-limit: 3
     labels:
       - "dependencies"
-      - "ci"
-
-  # Docker (Dev Container)
-  - package-ecosystem: "docker"
-    directory: "/.devcontainer"
-    schedule:
-      interval: "monthly"
-    labels:
-      - "dependencies"
-      - "devcontainer"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
