@@ -1,7 +1,7 @@
 # Empathy Framework
 
 ## Project Overview
-**Version:** 4.0.1
+**Version:** 4.2.0
 **Python:** 3.10+
 **Repository:** [Smart-AI-Memory/empathy-framework](https://github.com/Smart-AI-Memory/empathy-framework)
 
