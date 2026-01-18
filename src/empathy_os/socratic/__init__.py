@@ -52,6 +52,46 @@ from .generator import AgentGenerator
 from .success import SuccessCriteria, SuccessMetric, MetricType
 from .session import SocraticSession, SessionState
 
+# LLM-powered analysis
+from .llm_analyzer import (
+    LLMGoalAnalyzer,
+    LLMAnalysisResult,
+    LLMQuestionResult,
+    LLMAgentRecommendation,
+    llm_questions_to_form,
+)
+
+# Persistent storage
+from .storage import (
+    StorageBackend,
+    JSONFileStorage,
+    SQLiteStorage,
+    StorageManager,
+)
+
+# CLI interface
+from .cli import SocraticCLI, Console
+
+# Web UI components
+from .web_ui import (
+    ReactFormSchema,
+    ReactSessionSchema,
+    ReactBlueprintSchema,
+    render_form_html,
+    render_complete_page,
+    create_form_response,
+    create_blueprint_response,
+)
+
+# Feedback loop
+from .feedback import (
+    FeedbackLoop,
+    FeedbackCollector,
+    AdaptiveAgentGenerator,
+    AgentPerformance,
+    WorkflowPattern,
+)
+
 __all__ = [
     # Core engine
     "SocraticWorkflowBuilder",
@@ -75,4 +115,32 @@ __all__ = [
     # Session
     "SocraticSession",
     "SessionState",
+    # LLM-powered analysis
+    "LLMGoalAnalyzer",
+    "LLMAnalysisResult",
+    "LLMQuestionResult",
+    "LLMAgentRecommendation",
+    "llm_questions_to_form",
+    # Persistent storage
+    "StorageBackend",
+    "JSONFileStorage",
+    "SQLiteStorage",
+    "StorageManager",
+    # CLI interface
+    "SocraticCLI",
+    "Console",
+    # Web UI components
+    "ReactFormSchema",
+    "ReactSessionSchema",
+    "ReactBlueprintSchema",
+    "render_form_html",
+    "render_complete_page",
+    "create_form_response",
+    "create_blueprint_response",
+    # Feedback loop
+    "FeedbackLoop",
+    "FeedbackCollector",
+    "AdaptiveAgentGenerator",
+    "AgentPerformance",
+    "WorkflowPattern",
 ]
