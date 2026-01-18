@@ -1,0 +1,247 @@
+name: Socratic Module Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/empathy_os/socratic/**'
+      - 'tests/unit/socratic/**'
+      - 'tests/integration/socratic/**'
+      - '.github/workflows/socratic-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/empathy_os/socratic/**'
+      - 'tests/unit/socratic/**'
+      - 'tests/integration/socratic/**'
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install pytest pytest-cov pytest-asyncio
+
+    - name: Run Socratic unit tests
+      run: |
+        pytest tests/unit/socratic/ -v --cov=src/empathy_os/socratic --cov-report=xml --cov-report=term-missing
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+    - name: Upload coverage
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage.xml
+        flags: socratic-unit
+        name: socratic-unit-coverage
+        fail_ci_if_error: false
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install pytest pytest-asyncio
+
+    - name: Run Socratic integration tests
+      run: |
+        pytest tests/integration/socratic/ -v --tb=short
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+  type-check:
+    name: Type Checking
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install mypy types-python-dateutil
+
+    - name: Run MyPy on Socratic module
+      run: |
+        mypy src/empathy_os/socratic --ignore-missing-imports --no-error-summary
+      continue-on-error: true  # Non-blocking for gradual adoption
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml]
+
+    - name: Run Bandit on Socratic module
+      run: |
+        bandit -r src/empathy_os/socratic -c .bandit --severity-level medium --confidence-level medium
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black ruff
+
+    - name: Check formatting
+      run: |
+        black --check src/empathy_os/socratic tests/unit/socratic tests/integration/socratic
+
+    - name: Lint with Ruff
+      run: |
+        ruff check src/empathy_os/socratic tests/unit/socratic tests/integration/socratic
+
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install pytest pytest-benchmark
+
+    - name: Run benchmarks
+      run: |
+        pytest tests/benchmarks/socratic/ -v --benchmark-json=benchmark-results.json || true
+      continue-on-error: true  # Benchmarks are informational
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: benchmark-results.json
+      if: always()
+
+  module-coverage:
+    name: Module Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install pytest pytest-cov
+
+    - name: Run full coverage analysis
+      run: |
+        pytest tests/unit/socratic tests/integration/socratic \
+          --cov=src/empathy_os/socratic \
+          --cov-report=html \
+          --cov-report=term \
+          --cov-fail-under=60
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: socratic-coverage-report
+        path: htmlcov/
+
+  docs-validation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install pydocstyle
+
+    - name: Check docstrings
+      run: |
+        pydocstyle src/empathy_os/socratic --convention=google --count || true
+      continue-on-error: true  # Non-blocking for gradual adoption
