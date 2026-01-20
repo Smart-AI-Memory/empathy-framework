@@ -45,7 +45,19 @@ from .ab_testing import (
 )
 from .blueprint import (
     AgentBlueprint,
+    AgentMessage,
+    AgentPoolConfig,
     AgentSpec,
+    CommunicationPattern,
+    CoordinationConfig,
+    CoordinationStrategy,
+    FailureHandling,
+    ManagerSpec,
+    MemoryConfig,
+    MemoryType,
+    OutputConfig,
+    OutputFormat as BlueprintOutputFormat,
+    TeamManagerBlueprint,
     ToolSpec,
     WorkflowBlueprint,
 )
@@ -178,6 +190,19 @@ __all__ = [
     "AgentSpec",
     "WorkflowBlueprint",
     "ToolSpec",
+    # Team Manager Blueprint
+    "TeamManagerBlueprint",
+    "ManagerSpec",
+    "AgentPoolConfig",
+    "CoordinationConfig",
+    "CoordinationStrategy",
+    "CommunicationPattern",
+    "FailureHandling",
+    "OutputConfig",
+    "BlueprintOutputFormat",
+    "MemoryConfig",
+    "MemoryType",
+    "AgentMessage",
     # Generation
     "AgentGenerator",
     # Success measurement

@@ -100,6 +100,20 @@ DOMAIN_PATTERNS = [
         phrases=["refactor code", "clean up", "improve structure"],
         weight=0.9,
     ),
+    DomainPattern(
+        domain="team_management",
+        keywords=["team", "agents", "orchestrate", "coordinate", "delegate", "manage"],
+        phrases=[
+            "team of agents",
+            "manage agents",
+            "coordinate agents",
+            "multi-agent",
+            "agent team",
+            "orchestrate workflow",
+            "delegate tasks",
+        ],
+        weight=1.1,
+    ),
 ]
 
 
