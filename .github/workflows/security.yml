@@ -34,7 +34,7 @@ jobs:
         bandit -c .bandit -r src/ empathy_llm_toolkit/ coach_wizards/ empathy_software_plugin/ --format json --output bandit-report.json --severity-level medium --confidence-level medium || true
 
     - name: Upload Bandit results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: bandit-results
         path: bandit-report.json
@@ -44,7 +44,7 @@ jobs:
         safety check --json --output safety-report.json || true
 
     - name: Upload Safety results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: safety-results
         path: safety-report.json

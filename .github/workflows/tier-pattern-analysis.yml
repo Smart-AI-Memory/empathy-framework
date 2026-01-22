@@ -68,7 +68,7 @@ jobs:
           fi
 
       - name: Upload analysis report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pattern-analysis-report
           path: pattern_analysis_report.txt
