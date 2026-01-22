@@ -17,6 +17,8 @@ from pathlib import Path
 
 from test_generator import TestGenerator
 
+from empathy_os.config import _validate_file_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,11 +68,13 @@ class TDDFirst:
         test_dir.mkdir(parents=True, exist_ok=True)
 
         unit_test_file = test_dir / f"test_{name}_wizard.py"
-        with open(unit_test_file, "w") as f:
+        validated_unit_test = _validate_file_path(str(unit_test_file))
+        with open(validated_unit_test, "w") as f:
             f.write(tests["unit"])
 
         fixtures_file = test_dir / f"fixtures_{name}.py"
-        with open(fixtures_file, "w") as f:
+        validated_fixtures = _validate_file_path(str(fixtures_file))
+        with open(validated_fixtures, "w") as f:
             f.write(tests["fixtures"])
 
         # Step 2: Generate minimal wizard skeleton
@@ -129,7 +133,8 @@ class {class_name}:
         wizard_dir.mkdir(parents=True, exist_ok=True)
 
         wizard_file = wizard_dir / f"{name}_wizard.py"
-        with open(wizard_file, "w") as f:
+        validated_wizard = _validate_file_path(str(wizard_file))
+        with open(validated_wizard, "w") as f:
             f.write(skeleton)
 
-        return wizard_file
+        return validated_wizard

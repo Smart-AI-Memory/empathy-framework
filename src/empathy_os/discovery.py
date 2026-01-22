@@ -11,6 +11,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from empathy_os.config import _validate_file_path
+
 # Discovery tips with conditions
 DISCOVERY_TIPS = {
     # After first commands
@@ -130,7 +132,8 @@ class DiscoveryEngine:
     def _save(self) -> None:
         """Save state to storage."""
         self.state["last_updated"] = datetime.now().isoformat()
-        with open(self.stats_file, "w") as f:
+        validated_path = _validate_file_path(str(self.stats_file))
+        with open(validated_path, "w") as f:
             json.dump(self.state, f, indent=2)
 
     def record_command(self, command: str) -> list:

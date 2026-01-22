@@ -102,6 +102,19 @@ SECURITY_EXAMPLE_PATHS = [
     "pii_scrubber.py",  # Privacy tool
     "secure_memdocs",  # Secure storage module
     "/security/",  # Security modules
+    "/benchmarks/",  # Benchmark files with test fixtures
+    "benchmark_",  # Benchmark files (e.g., benchmark_caching.py)
+    "phase_2_setup.py",  # Setup file with educational patterns
+]
+
+# Patterns indicating test fixture data (code written to temp files for testing)
+TEST_FIXTURE_PATTERNS = [
+    r"SECURITY_TEST_FILES\s*=",  # Dict of test fixture code
+    r"write_text\s*\(",  # Writing test data to temp files
+    r"# UNSAFE - DO NOT USE",  # Educational comments showing bad patterns
+    r"# SAFE -",  # Educational comments showing good patterns
+    r"# INJECTION RISK",  # Educational markers
+    r"pragma:\s*allowlist\s*secret",  # Explicit allowlist marker
 ]
 
 # Test file patterns - findings here are informational, not critical

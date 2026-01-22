@@ -16,6 +16,8 @@ import platform
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 
 def is_windows() -> bool:
     """Check if running on Windows."""
@@ -197,7 +199,8 @@ def write_text_file(path: str | Path, content: str, encoding: str = "utf-8") -> 
         Number of characters written
 
     """
-    return Path(path).write_text(content, encoding=encoding)
+    validated_path = _validate_file_path(str(path))
+    return validated_path.write_text(content, encoding=encoding)
 
 
 def normalize_path(path: str | Path) -> Path:

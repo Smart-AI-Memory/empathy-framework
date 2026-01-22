@@ -65,9 +65,9 @@ def bug_predict_workflow(cost_tracker):
     Returns:
         BugPredictWorkflow instance ready for testing
     """
-    from empathy_os.workflows.bug_predict import BugPredictWorkflow
+    from empathy_os.workflows.bug_predict import BugPredictionWorkflow
 
-    return BugPredictWorkflow(cost_tracker=cost_tracker)
+    return BugPredictionWorkflow(cost_tracker=cost_tracker)
 
 
 @pytest.fixture

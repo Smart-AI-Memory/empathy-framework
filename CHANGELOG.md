@@ -5,7 +5,76 @@ All notable changes to the Empathy Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.6.4] - 2026-01-22
+
+### Changed - CLAUDE CODE OPTIMIZATION
+
+- **Optimized for Claude Code** - Framework extensively tested and optimized for use with Claude Code while maintaining full compatibility with other LLMs (OpenAI, Gemini, local models)
+- **README updates** - Clarified Claude Code optimization messaging and multi-LLM support
+
+### Fixed
+
+- **Test suite stability** - Resolved async mock issues in provider tests
+- **Pattern cleanup** - Removed 63 stale debugging workflow JSON files
+- **Test coverage expansion** - Added 15+ new test files for memory, workflows, orchestration, and cache modules
+
+### Added
+
+- **New CLI module** - Restructured CLI into `src/empathy_os/cli/` package
+- **Extended test coverage** - New tests for:
+  - Memory: `test_graph_extended.py`, `test_long_term_extended.py`, `test_short_term_*.py`
+  - Workflows: `test_bug_predict_workflow.py`, `test_code_review_workflow.py`, `test_security_audit_workflow.py`
+  - Orchestration: `test_condition_evaluator.py`
+  - Cache: `test_cache_base.py`
+
 ## [4.6.3] - 2026-01-21
+
+### Added - CLAUDE-FIRST OPTIMIZATION
+
+#### Claude Code Integration
+- **10+ New Slash Commands** - Structured workflows optimized for Claude Code:
+  - `/debug` - Bug investigation with historical pattern matching
+  - `/refactor` - Safe refactoring with test verification
+  - `/review` - Automated code review against project standards
+  - `/review-pr` - PR review with APPROVE/REJECT verdict
+  - `/deps` - Dependency audit (CVE scanning, licenses, outdated packages)
+  - `/profile` - Performance profiling and bottleneck detection
+  - `/benchmark` - Performance regression tracking
+  - `/explain` - Code architecture explanation
+  - `/commit` - Well-formatted git commits
+  - `/pr` - Structured PR creation
+  - **Files**: `.claude/commands/*.md`
+
+- **Automatic Pattern Learning** - Skills auto-capture insights after completion:
+  - Runs `python -m empathy_os.cli learn --quiet &` in background
+  - Patterns saved to `patterns/debugging.json`, `patterns/refactoring_memory.json`
+  - No manual "Learn Patterns" button needed
+  - **Files**: `.claude/commands/debug.md`, `.claude/commands/refactor.md`, `.claude/commands/review.md`
+
+- **VSCode Dashboard Reorganization** - Cleaner, skill-focused layout:
+  - All buttons now show slash commands (e.g., "Debug /debug")
+  - 2-column layout prevents overflow
+  - Removed redundant Quick Actions section
+  - New GIT & RELEASE section with Commit, PR, Release buttons
+  - **Files**: `vscode-extension/src/panels/EmpathyDashboardPanel.ts`
+
+#### Cost Optimization
+- **Prompt Caching Enabled by Default** - Up to 90% cost reduction on repeated operations:
+  - System prompts marked with `cache_control: {type: "ephemeral"}`
+  - 5-minute TTL, break-even at ~3 requests
+  - **Files**: `empathy_llm_toolkit/providers.py`
+
+- **True Async I/O** - Migrated to `AsyncAnthropic` client:
+  - Prevents event loop blocking in async contexts
+  - Enables parallel API calls for better efficiency
+  - **Files**: `empathy_llm_toolkit/providers.py:112`
+
+#### Multi-LLM Support (Unchanged)
+- All providers remain fully supported:
+  - `AnthropicProvider` - Claude (primary, optimized)
+  - `OpenAIProvider` - GPT-4, GPT-3.5 (AsyncOpenAI)
+  - `GeminiProvider` - Gemini 1.5, 2.0
+  - `LocalProvider` - Ollama, LM Studio (aiohttp)
 
 ### Security
 

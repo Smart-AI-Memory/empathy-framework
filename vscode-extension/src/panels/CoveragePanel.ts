@@ -165,14 +165,9 @@ export class CoveragePanel {
             }
         });
 
-        // Get configured python path
-        const config = vscode.workspace.getConfiguration('empathy');
-        const pythonPath = config.get<string>('pythonPath', 'python');
-        console.log('[CoveragePanel] Python path:', pythonPath);
-
-        // Run test-coverage-boost workflow (v4.0 CrewAI)
-        const args = ['-m', 'empathy_os.cli', 'workflow', 'run', 'test-coverage-boost', '--input', JSON.stringify({target_coverage: target})];
-        const command = `${pythonPath} ${args.join(' ')}`;
+        // v4.6.3: Use 'empathy' CLI directly
+        const args = ['workflow', 'run', 'test-coverage-boost', '--input', JSON.stringify({target_coverage: target})];
+        const command = `empathy ${args.join(' ')}`;
         console.log('[CoveragePanel] Running command:', command);
         outputChannel.appendLine(`Command: ${command}`);
         outputChannel.appendLine('');
@@ -186,7 +181,7 @@ export class CoveragePanel {
             progress.report({ message: 'Analyzing test coverage...' });
 
             return new Promise<void>((resolve) => {
-                const process = cp.spawn(pythonPath, args, { cwd: workspaceFolder });
+                const process = cp.spawn('empathy', args, { cwd: workspaceFolder });
 
                 // Stream stdout in real-time
                 process.stdout.on('data', (data) => {

@@ -20,6 +20,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 from .base import BaseWorkflow, ModelTier
 from .step_config import WorkflowStepConfig
 
@@ -218,16 +220,18 @@ class DocumentGenerationWorkflow(BaseWorkflow):
 
         # Write document
         try:
-            doc_path.write_text(document, encoding="utf-8")
-            logger.info(f"Documentation exported to: {doc_path}")
+            validated_doc_path = _validate_file_path(str(doc_path))
+            validated_doc_path.write_text(document, encoding="utf-8")
+            logger.info(f"Documentation exported to: {validated_doc_path}")
 
             # Write report if provided
             if report and report_path:
-                report_path.write_text(report, encoding="utf-8")
-                logger.info(f"Report exported to: {report_path}")
+                validated_report_path = _validate_file_path(str(report_path))
+                validated_report_path.write_text(report, encoding="utf-8")
+                logger.info(f"Report exported to: {validated_report_path}")
 
-            return doc_path, report_path
-        except Exception as e:
+            return validated_doc_path, validated_report_path if report else None
+        except (OSError, ValueError) as e:
             logger.error(f"Failed to export documentation: {e}")
             return None, None
 

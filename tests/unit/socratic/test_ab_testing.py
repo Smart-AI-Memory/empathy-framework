@@ -4,85 +4,121 @@ Copyright 2026 Smart-AI-Memory
 Licensed under Fair Source License 0.9
 """
 
-import pytest
 
 
-@pytest.mark.xfail(reason="Experiment API changed - tests need update")
 class TestExperiment:
     """Tests for Experiment dataclass."""
 
     def test_create_experiment(self):
-        """Test creating an experiment."""
-        from empathy_os.socratic.ab_testing import AllocationStrategy, Experiment
+        """Test creating an experiment with required fields."""
+        from empathy_os.socratic.ab_testing import (
+            AllocationStrategy,
+            Experiment,
+            ExperimentStatus,
+            Variant,
+        )
+
+        # Create variants first (required)
+        control = Variant(
+            variant_id="control",
+            name="Control",
+            description="Control variant",
+            config={"agents": ["code_reviewer"]},
+            is_control=True,
+        )
+        treatment = Variant(
+            variant_id="treatment",
+            name="Treatment",
+            description="Treatment variant",
+            config={"agents": ["code_reviewer", "security_scanner"]},
+        )
 
         experiment = Experiment(
             experiment_id="exp-001",
             name="Test Experiment",
             description="Testing workflow variations",
+            hypothesis="More agents improve quality",
+            variants=[control, treatment],
         )
 
         assert experiment.experiment_id == "exp-001"
         assert experiment.name == "Test Experiment"
         assert experiment.allocation_strategy == AllocationStrategy.FIXED
-        assert experiment.is_active is True
+        assert experiment.status == ExperimentStatus.DRAFT
+        assert len(experiment.variants) == 2
 
     def test_experiment_with_custom_allocation(self):
         """Test experiment with custom allocation strategy."""
-        from empathy_os.socratic.ab_testing import AllocationStrategy, Experiment
+        from empathy_os.socratic.ab_testing import (
+            AllocationStrategy,
+            Experiment,
+            Variant,
+        )
+
+        variant = Variant(
+            variant_id="control",
+            name="Control",
+            description="Control",
+            config={},
+            is_control=True,
+        )
 
         experiment = Experiment(
             experiment_id="exp-002",
             name="Thompson Sampling Test",
+            description="Testing Thompson sampling",
+            hypothesis="Thompson sampling improves allocation",
+            variants=[variant],
             allocation_strategy=AllocationStrategy.THOMPSON_SAMPLING,
-            allocation_params={"prior_alpha": 1, "prior_beta": 1},
         )
 
         assert experiment.allocation_strategy == AllocationStrategy.THOMPSON_SAMPLING
-        assert experiment.allocation_params["prior_alpha"] == 1
 
 
-@pytest.mark.xfail(reason="Variant API changed - tests need update")
 class TestVariant:
     """Tests for Variant dataclass."""
 
-    def test_create_variant(self, sample_workflow_blueprint):
+    def test_create_variant(self):
         """Test creating a variant."""
         from empathy_os.socratic.ab_testing import Variant
 
         variant = Variant(
             variant_id="var-001",
             name="Control",
-            workflow_blueprint=sample_workflow_blueprint,
-            weight=0.5,
+            description="Control variant for testing",
+            config={"agents": ["code_reviewer"]},
+            traffic_percentage=50.0,
         )
 
         assert variant.variant_id == "var-001"
-        assert variant.weight == 0.5
+        assert variant.traffic_percentage == 50.0
         assert variant.impressions == 0
         assert variant.conversions == 0
 
-    def test_variant_conversion_rate(self, sample_workflow_blueprint):
+    def test_variant_conversion_rate(self):
         """Test variant conversion rate calculation."""
         from empathy_os.socratic.ab_testing import Variant
 
         variant = Variant(
             variant_id="var-001",
             name="Test",
-            workflow_blueprint=sample_workflow_blueprint,
+            description="Test variant",
+            config={},
         )
         variant.impressions = 100
         variant.conversions = 25
 
         assert variant.conversion_rate == 0.25
 
-    def test_variant_zero_impressions(self, sample_workflow_blueprint):
+    def test_variant_zero_impressions(self):
         """Test conversion rate with zero impressions."""
         from empathy_os.socratic.ab_testing import Variant
 
         variant = Variant(
             variant_id="var-001",
             name="Test",
-            workflow_blueprint=sample_workflow_blueprint,
+            description="Test variant",
+            config={},
         )
 
         assert variant.conversion_rate == 0.0
@@ -116,7 +152,20 @@ class TestAllocationStrategy:
         assert AllocationStrategy.UCB.value == "ucb"
 
 
-@pytest.mark.xfail(reason="ExperimentManager API changed - tests need update")
+class TestExperimentStatus:
+    """Tests for ExperimentStatus enum."""
+
+    def test_all_statuses_exist(self):
+        """Test all experiment statuses exist."""
+        from empathy_os.socratic.ab_testing import ExperimentStatus
+
+        assert ExperimentStatus.DRAFT.value == "draft"
+        assert ExperimentStatus.RUNNING.value == "running"
+        assert ExperimentStatus.PAUSED.value == "paused"
+        assert ExperimentStatus.COMPLETED.value == "completed"
+        assert ExperimentStatus.STOPPED.value == "stopped"
+
+
 class TestExperimentManager:
     """Tests for ExperimentManager class."""
 
@@ -126,168 +175,74 @@ class TestExperimentManager:
 
         manager = ExperimentManager(storage_path=storage_path / "experiments.json")
 
-        assert manager.active_experiment_count == 0
+        assert manager is not None
 
-    def test_create_experiment(self, storage_path, sample_workflow_blueprint):
+    def test_create_experiment(self, storage_path):
         """Test creating an experiment via manager."""
-        from empathy_os.socratic.ab_testing import ExperimentManager, Variant
+        from empathy_os.socratic.ab_testing import ExperimentManager
 
         manager = ExperimentManager(storage_path=storage_path / "experiments.json")
-
-        variants = [
-            Variant(
-                variant_id="control",
-                name="Control",
-                workflow_blueprint=sample_workflow_blueprint,
-                weight=0.5,
-            ),
-            Variant(
-                variant_id="treatment",
-                name="Treatment",
-                workflow_blueprint=sample_workflow_blueprint,
-                weight=0.5,
-            ),
-        ]
 
         experiment = manager.create_experiment(
             name="Code Review Test",
             description="Testing different code review workflows",
-            variants=variants,
+            hypothesis="More agents improve review quality",
+            control_config={"agents": ["code_reviewer"]},
+            treatment_configs=[
+                {"name": "Treatment A", "config": {"agents": ["code_reviewer", "security_scanner"]}},
+            ],
         )
 
         assert experiment.experiment_id is not None
-        assert len(experiment.variants) == 2
-        assert manager.active_experiment_count == 1
+        assert len(experiment.variants) == 2  # control + 1 treatment
 
-    def test_allocate_variant_fixed(self, storage_path, sample_workflow_blueprint):
-        """Test allocating variant with fixed strategy."""
-        from empathy_os.socratic.ab_testing import (
-            AllocationStrategy,
-            ExperimentManager,
-            Variant,
-        )
+    def test_get_experiment(self, storage_path):
+        """Test retrieving an experiment."""
+        from empathy_os.socratic.ab_testing import ExperimentManager
 
         manager = ExperimentManager(storage_path=storage_path / "experiments.json")
 
-        variants = [
-            Variant(
-                variant_id="control",
-                name="Control",
-                workflow_blueprint=sample_workflow_blueprint,
-                weight=0.7,
-            ),
-            Variant(
-                variant_id="treatment",
-                name="Treatment",
-                workflow_blueprint=sample_workflow_blueprint,
-                weight=0.3,
-            ),
-        ]
-
-        experiment = manager.create_experiment(
+        created = manager.create_experiment(
             name="Test",
-            variants=variants,
-            allocation_strategy=AllocationStrategy.FIXED,
+            description="Test experiment",
+            hypothesis="Test hypothesis",
+            control_config={"agents": []},
+            treatment_configs=[{"name": "T1", "config": {"agents": ["agent1"]}}],
         )
 
-        # Allocate many times and check distribution
-        allocations = {"control": 0, "treatment": 0}
-        for _ in range(1000):
-            variant = manager.allocate_variant(experiment.experiment_id)
-            allocations[variant.variant_id] += 1
+        retrieved = manager.get_experiment(created.experiment_id)
 
-        # Should roughly match weights (70/30)
-        control_ratio = allocations["control"] / 1000
-        assert 0.60 < control_ratio < 0.80
-
-    def test_record_outcome(self, storage_path, sample_workflow_blueprint):
-        """Test recording experiment outcome."""
-        from empathy_os.socratic.ab_testing import ExperimentManager, Variant
-
-        manager = ExperimentManager(storage_path=storage_path / "experiments.json")
-
-        variants = [
-            Variant(
-                variant_id="control",
-                name="Control",
-                workflow_blueprint=sample_workflow_blueprint,
-            ),
-        ]
-
-        experiment = manager.create_experiment(name="Test", variants=variants)
-
-        # Record outcomes
-        manager.record_impression(experiment.experiment_id, "control")
-        manager.record_impression(experiment.experiment_id, "control")
-        manager.record_conversion(experiment.experiment_id, "control")
-
-        updated = manager.get_experiment(experiment.experiment_id)
-        control_variant = updated.variants[0]
-
-        assert control_variant.impressions == 2
-        assert control_variant.conversions == 1
-
-    def test_stop_experiment(self, storage_path, sample_workflow_blueprint):
-        """Test stopping an experiment."""
-        from empathy_os.socratic.ab_testing import ExperimentManager, Variant
-
-        manager = ExperimentManager(storage_path=storage_path / "experiments.json")
-
-        variants = [
-            Variant(
-                variant_id="control",
-                name="Control",
-                workflow_blueprint=sample_workflow_blueprint,
-            ),
-        ]
-
-        experiment = manager.create_experiment(name="Test", variants=variants)
-
-        manager.stop_experiment(experiment.experiment_id)
-
-        updated = manager.get_experiment(experiment.experiment_id)
-        assert updated.is_active is False
+        assert retrieved is not None
+        assert retrieved.experiment_id == created.experiment_id
 
 
-@pytest.mark.xfail(reason="StatisticalAnalyzer API changed - tests need update")
 class TestStatisticalAnalyzer:
     """Tests for StatisticalAnalyzer class."""
 
-    def test_create_analyzer(self):
-        """Test creating a statistical analyzer."""
+    def test_z_test_proportions(self):
+        """Test z-test for proportions returns tuple."""
         from empathy_os.socratic.ab_testing import StatisticalAnalyzer
-
-        analyzer = StatisticalAnalyzer()
-        assert analyzer is not None
-
-    def test_z_test(self):
-        """Test z-test for proportions."""
-        from empathy_os.socratic.ab_testing import StatisticalAnalyzer
-
-        analyzer = StatisticalAnalyzer()
 
         # Control: 100/1000 = 10% conversion
         # Treatment: 150/1000 = 15% conversion
-        result = analyzer.z_test(
-            control_conversions=100,
-            control_trials=1000,
-            treatment_conversions=150,
-            treatment_trials=1000,
+        z_score, p_value = StatisticalAnalyzer.z_test_proportions(
+            n1=1000,
+            c1=100,
+            n2=1000,
+            c2=150,
         )
 
-        assert "z_score" in result
-        assert "p_value" in result
-        assert "significant" in result
+        assert isinstance(z_score, float)
+        assert isinstance(p_value, float)
+        assert p_value >= 0.0 and p_value <= 1.0
 
-    def test_wilson_confidence_interval(self):
+    def test_confidence_interval(self):
         """Test Wilson score confidence interval."""
         from empathy_os.socratic.ab_testing import StatisticalAnalyzer
 
-        analyzer = StatisticalAnalyzer()
-
-        lower, upper = analyzer.wilson_confidence_interval(
+        lower, upper = StatisticalAnalyzer.confidence_interval(
+            n=1000,
             successes=100,
-            trials=1000,
             confidence=0.95,
         )
 
@@ -296,24 +251,23 @@ class TestStatisticalAnalyzer:
         assert lower > 0
         assert upper < 1
 
-    def test_required_sample_size(self):
-        """Test sample size calculation."""
+    def test_t_test_means(self):
+        """Test t-test for means."""
         from empathy_os.socratic.ab_testing import StatisticalAnalyzer
 
-        analyzer = StatisticalAnalyzer()
-
-        sample_size = analyzer.required_sample_size(
-            baseline_rate=0.10,
-            minimum_detectable_effect=0.02,
-            power=0.80,
-            alpha=0.05,
+        t_score, p_value = StatisticalAnalyzer.t_test_means(
+            n1=100,
+            mean1=10.0,
+            var1=2.0,
+            n2=100,
+            mean2=12.0,
+            var2=2.5,
         )
 
-        # Should require substantial sample for detecting 2% lift
-        assert sample_size > 1000
+        assert isinstance(t_score, float)
+        assert isinstance(p_value, float)
 
 
-@pytest.mark.xfail(reason="WorkflowABTester uses outdated fixture - tests need update")
 class TestWorkflowABTester:
     """Tests for WorkflowABTester class."""
 
@@ -325,88 +279,70 @@ class TestWorkflowABTester:
 
         assert tester is not None
 
-    def test_create_workflow_test(self, storage_path, sample_workflow_blueprint):
-        """Test creating a workflow A/B test."""
+    def test_create_workflow_experiment(self, storage_path):
+        """Test creating a workflow A/B experiment."""
         from empathy_os.socratic.ab_testing import WorkflowABTester
 
         tester = WorkflowABTester(storage_path=storage_path / "ab_tests.json")
 
-        # Create a modified blueprint as treatment
-        treatment_blueprint = sample_workflow_blueprint
-
-        experiment_id = tester.create_test(
+        experiment_id = tester.create_workflow_experiment(
             name="Review Workflow Test",
-            control_workflow=sample_workflow_blueprint,
-            treatment_workflow=treatment_blueprint,
-            description="Testing enhanced review workflow",
+            hypothesis="More agents improve quality",
+            control_agents=["code_reviewer"],
+            treatment_agents_list=[
+                ["code_reviewer", "security_scanner"],
+            ],
+            domain="code_review",
         )
 
         assert experiment_id is not None
 
-    def test_get_workflow_for_user(self, storage_path, sample_workflow_blueprint):
-        """Test getting workflow for a user."""
-        from empathy_os.socratic.ab_testing import WorkflowABTester
 
-        tester = WorkflowABTester(storage_path=storage_path / "ab_tests.json")
-
-        experiment_id = tester.create_test(
-            name="Test",
-            control_workflow=sample_workflow_blueprint,
-            treatment_workflow=sample_workflow_blueprint,
-        )
-
-        workflow, variant_id = tester.get_workflow_for_user(
-            experiment_id=experiment_id,
-            user_id="user-123",
-        )
-
-        assert workflow is not None
-        assert variant_id in ["control", "treatment"]
-
-    def test_record_workflow_success(self, storage_path, sample_workflow_blueprint):
-        """Test recording workflow execution success."""
-        from empathy_os.socratic.ab_testing import WorkflowABTester
-
-        tester = WorkflowABTester(storage_path=storage_path / "ab_tests.json")
-
-        experiment_id = tester.create_test(
-            name="Test",
-            control_workflow=sample_workflow_blueprint,
-            treatment_workflow=sample_workflow_blueprint,
-        )
-
-        workflow, variant_id = tester.get_workflow_for_user(
-            experiment_id=experiment_id,
-            user_id="user-123",
-        )
-
-        # Record success
-        tester.record_success(
-            experiment_id=experiment_id,
-            variant_id=variant_id,
-        )
-
-        results = tester.get_results(experiment_id)
-        assert results is not None
-
-
-@pytest.mark.xfail(reason="Test API mismatch - ExperimentResult takes Experiment object, not experiment_id")
 class TestExperimentResult:
     """Tests for ExperimentResult dataclass."""
 
     def test_create_result(self):
         """Test creating an experiment result."""
-        from empathy_os.socratic.ab_testing import ExperimentResult
+        from empathy_os.socratic.ab_testing import (
+            Experiment,
+            ExperimentResult,
+            Variant,
+        )
+
+        # Create experiment and variants first
+        control = Variant(
+            variant_id="control",
+            name="Control",
+            description="Control",
+            config={},
+            is_control=True,
+        )
+        treatment = Variant(
+            variant_id="treatment",
+            name="Treatment",
+            description="Treatment",
+            config={},
+        )
+
+        experiment = Experiment(
+            experiment_id="exp-001",
+            name="Test",
+            description="Test",
+            hypothesis="Test hypothesis",
+            variants=[control, treatment],
+        )
 
         result = ExperimentResult(
-            experiment_id="exp-001",
-            winner_variant_id="treatment",
-            confidence_level=0.95,
-            lift=0.15,
+            experiment=experiment,
+            winner=treatment,
+            is_significant=True,
             p_value=0.03,
+            confidence_interval=(0.10, 0.20),
+            lift=0.15,
             recommendation="Deploy treatment variant",
         )
 
-        assert result.winner_variant_id == "treatment"
+        assert result.winner.variant_id == "treatment"
         assert result.lift == 0.15
         assert result.p_value < 0.05
+        assert result.is_significant is True

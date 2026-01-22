@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
 from empathy_os.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -84,6 +85,11 @@ class WorkflowTierTracker:
         "capable": 0.090,
         "premium": 0.450,
     }
+
+    # Retention policy: keep only this many workflow files
+    MAX_WORKFLOW_FILES = 100
+    # Only run cleanup every N saves to avoid overhead
+    CLEANUP_FREQUENCY = 10
 
     def __init__(
         self,
@@ -292,13 +298,19 @@ class WorkflowTierTracker:
 
             # Save to individual pattern file
             pattern_file = self.patterns_dir / f"{progression['pattern_id']}.json"
-            with open(pattern_file, "w") as f:
+            validated_pattern_file = _validate_file_path(str(pattern_file))
+            with open(validated_pattern_file, "w") as f:
                 json.dump(progression, f, indent=2)
 
-            logger.info(f"💾 Saved tier progression: {pattern_file}")
+            logger.info(f"💾 Saved tier progression: {validated_pattern_file}")
 
             # Also update consolidated patterns file
             self._update_consolidated_patterns(progression)
+
+            # Periodic cleanup of old workflow files (every CLEANUP_FREQUENCY saves)
+            workflow_count = len(list(self.patterns_dir.glob("workflow_*.json")))
+            if workflow_count > self.MAX_WORKFLOW_FILES + self.CLEANUP_FREQUENCY:
+                self._cleanup_old_workflow_files()
 
             return pattern_file
 
@@ -437,7 +449,7 @@ class WorkflowTierTracker:
         return actual_cost * 5  # Conservative multiplier
 
     def _update_consolidated_patterns(self, progression: dict[str, Any]):
-        """Update the consolidated patterns.json file."""
+        """Update the consolidated patterns.json file with retention policy."""
         consolidated_file = self.patterns_dir / "all_patterns.json"
 
         try:
@@ -452,12 +464,51 @@ class WorkflowTierTracker:
             # Add new progression
             data["patterns"].append(progression)
 
+            # Apply retention policy: keep only MAX_WORKFLOW_FILES patterns
+            if len(data["patterns"]) > self.MAX_WORKFLOW_FILES:
+                data["patterns"] = data["patterns"][-self.MAX_WORKFLOW_FILES :]
+
             # Save updated file
-            with open(consolidated_file, "w") as f:
+            validated_consolidated = _validate_file_path(str(consolidated_file))
+            with open(validated_consolidated, "w") as f:
                 json.dump(data, f, indent=2)
 
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             logger.warning(f"Could not update consolidated patterns: {e}")
+            # If file is corrupted, start fresh
+            try:
+                data = {"patterns": [progression]}
+                validated_consolidated = _validate_file_path(str(consolidated_file))
+                with open(validated_consolidated, "w") as f:
+                    json.dump(data, f, indent=2)
+                logger.info("Recreated consolidated patterns file")
+            except (OSError, ValueError) as e2:
+                logger.warning(f"Could not recreate consolidated patterns: {e2}")
+
+    def _cleanup_old_workflow_files(self):
+        """Remove old workflow files to prevent unbounded growth.
+
+        Called periodically during save_progression to keep disk usage bounded.
+        Keeps only the most recent MAX_WORKFLOW_FILES workflow files.
+        """
+        try:
+            workflow_files = sorted(
+                self.patterns_dir.glob("workflow_*.json"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+
+            # Delete files beyond retention limit
+            files_to_delete = workflow_files[self.MAX_WORKFLOW_FILES :]
+            if files_to_delete:
+                for f in files_to_delete:
+                    try:
+                        f.unlink()
+                    except OSError:
+                        pass  # Best effort cleanup
+                logger.debug(f"Cleaned up {len(files_to_delete)} old workflow files")
+        except OSError as e:
+            logger.debug(f"Workflow file cleanup skipped: {e}")
 
 
 def auto_recommend_tier(

@@ -140,7 +140,7 @@ class TemplateRegistry:
         """
         # User templates
         template_files = self.storage_dir.glob("*.json")
-        template_ids = set(f.stem for f in template_files)
+        template_ids = {f.stem for f in template_files}
 
         # Add built-in templates
         if include_builtin:

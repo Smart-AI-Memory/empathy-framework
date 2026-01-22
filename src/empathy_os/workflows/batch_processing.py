@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from empathy_llm_toolkit.providers import AnthropicBatchProvider
+from empathy_os.config import _validate_file_path
 from empathy_os.models import get_model
 
 logger = logging.getLogger(__name__)
@@ -304,7 +305,8 @@ class BatchProcessingWorkflow:
         ]
 
         path = Path(output_path)
-        with open(path, "w") as f:
+        validated_path = _validate_file_path(str(path))
+        with open(validated_path, "w") as f:
             json.dump(output_data, f, indent=2)
 
-        logger.info(f"Results saved to {output_path}")
+        logger.info(f"Results saved to {validated_path}")

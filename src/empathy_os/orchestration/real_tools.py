@@ -627,8 +627,10 @@ class RealSecurityAuditor:
             except json.JSONDecodeError as e:
                 # Bandit might not be installed or JSON output malformed
                 logger.warning(f"Bandit not available or returned invalid JSON: {e}")
-                logger.debug(f"Bandit stdout: {result.stdout[:500]}")
-                logger.debug(f"Bandit stderr: {result.stderr[:500]}")
+                stdout = result.stdout if isinstance(result.stdout, str) else ""
+                stderr = result.stderr if isinstance(result.stderr, str) else ""
+                logger.debug(f"Bandit stdout: {stdout[:500]}")
+                logger.debug(f"Bandit stderr: {stderr[:500]}")
                 return SecurityReport(
                     total_issues=0,
                     critical_count=0,

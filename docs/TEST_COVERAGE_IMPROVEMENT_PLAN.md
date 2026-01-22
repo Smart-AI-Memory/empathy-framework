@@ -1,9 +1,98 @@
-# Test Coverage Improvement Plan - Empathy Framework v4.0.5
+# Test Coverage Improvement Plan - Empathy Framework v4.6.3
 
-**Created**: January 16, 2026
-**Current Coverage**: 60.1% (285 files)
-**Target Coverage**: 85%+
-**Estimated Timeline**: 3-4 weeks
+**Updated**: January 21, 2026
+**Current Coverage**: 59.28%
+**Target Coverage**: 80%+
+**Estimated Timeline**: 4-6 weeks
+
+---
+
+## Modules with < 20% Coverage (CRITICAL)
+
+The following 120+ modules have less than 20% test coverage and need immediate attention:
+
+### Memory System (Already Improved)
+| Module | Current | Target | Statements |
+|--------|---------|--------|------------|
+| `memory/short_term.py` | 57.48% | 80% | 896 | ✅ Improved
+| `memory/long_term.py` | 81.78% | 80% | 472 | ✅ Improved
+| `memory/graph.py` | 11.84% | 80% | 245 |
+| `memory/summary_index.py` | 13.43% | 80% | 283 |
+| `memory/redis_bootstrap.py` | 17.69% | 80% | 260 |
+
+### Cache System (0% Coverage - Critical)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `cache/__init__.py` | 31 | Medium |
+| `cache/base.py` | 42 | High |
+| `cache/dependency_manager.py` | 129 | High |
+| `cache/hash_only.py` | 69 | Medium |
+| `cache/hybrid.py` | 158 | High |
+| `cache/storage.py` | 95 | High |
+| `cache_monitor.py` | 132 | Medium |
+| `cache_stats.py` | 143 | Medium |
+
+### CLI & Commands (0% Coverage - Very Large)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `cli.py` | 1684 | Low (large) |
+| `cli_unified.py` | 615 | Low |
+| `workflow_commands.py` | 436 | Medium |
+
+### Workflows System (0% Coverage)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `workflows/base.py` | 771 | High |
+| `workflows/config.py` | 196 | High |
+| `workflows/progress.py` | 217 | Medium |
+| `workflows/batch_processing.py` | 87 | Medium |
+| `workflows/tier_tracking.py` | 177 | Medium |
+| `workflows/bug_predict.py` | 356 | Medium |
+| `workflows/code_review.py` | 367 | Medium |
+
+### Models & Providers (0% Coverage)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `models/fallback.py` | 243 | High |
+| `models/provider_config.py` | 301 | High |
+| `models/registry.py` | 87 | Medium |
+| `models/executor.py` | 61 | Medium |
+| `models/token_estimator.py` | 112 | Medium |
+| `models/validation.py` | 108 | Medium |
+| `models/telemetry.py` | 559 | Low |
+
+### Orchestration (0% Coverage)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `orchestration/execution_strategies.py` | 476 | High |
+| `orchestration/pattern_learner.py` | 234 | Medium |
+| `orchestration/config_store.py` | 176 | Medium |
+| `orchestration/meta_orchestrator.py` | 178 | Medium |
+| `orchestration/real_tools.py` | 345 | Medium |
+
+### Resilience (0% Coverage)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `resilience/circuit_breaker.py` | 136 | High |
+| `resilience/retry.py` | 92 | High |
+| `resilience/health.py` | 125 | Medium |
+| `resilience/fallback.py` | 89 | Medium |
+| `resilience/timeout.py` | 62 | Medium |
+
+### Socratic System (0% Coverage - Large)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `socratic/engine.py` | 221 | Medium |
+| `socratic/feedback.py` | 296 | Medium |
+| `socratic/collaboration.py` | 365 | Low |
+| `socratic/cli.py` | 393 | Low |
+
+### Meta Workflows (0% Coverage)
+| Module | Statements | Priority |
+|--------|------------|----------|
+| `meta_workflows/workflow.py` | 345 | High |
+| `meta_workflows/cli_meta_workflows.py` | 700 | Low |
+| `meta_workflows/pattern_learner.py` | 272 | Medium |
 
 ---
 

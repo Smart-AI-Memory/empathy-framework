@@ -20,6 +20,8 @@ from pathlib import Path
 
 import structlog
 
+from empathy_os.config import _validate_file_path
+
 logger = structlog.get_logger(__name__)
 
 
@@ -446,8 +448,9 @@ Add @imports to include shared memory files:
 """
 
     # Write file
-    memory_file.write_text(default_content, encoding="utf-8")
-    logger.info("project_memory_created", path=str(memory_file))
+    validated_path = _validate_file_path(str(memory_file))
+    validated_path.write_text(default_content, encoding="utf-8")
+    logger.info("project_memory_created", path=str(validated_path))
 
 
 # Example usage:

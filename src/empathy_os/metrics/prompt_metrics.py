@@ -14,6 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,7 +94,8 @@ class MetricsTracker:
 
         # Create file if it doesn't exist
         if not self.metrics_file.exists():
-            self.metrics_file.write_text("")
+            validated_path = _validate_file_path(str(self.metrics_file))
+            validated_path.write_text("")
 
     def log_metric(self, metric: PromptMetrics) -> None:
         """Log a single metric to file (JSON Lines format).
@@ -101,9 +104,10 @@ class MetricsTracker:
             metric: PromptMetrics instance to log
         """
         try:
-            with open(self.metrics_file, "a") as f:
+            validated_path = _validate_file_path(str(self.metrics_file))
+            with open(validated_path, "a") as f:
                 f.write(json.dumps(metric.to_dict()) + "\n")
-        except Exception as e:
+        except (OSError, ValueError) as e:
             logger.error(f"Failed to log metric: {e}")
 
     def get_metrics(

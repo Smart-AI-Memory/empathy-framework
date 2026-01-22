@@ -13,9 +13,9 @@ Licensed under Fair Source 0.9
 from unittest.mock import Mock
 
 import pytest
-from wizards_consolidated.software.base_wizard import BaseWizard
 
 from empathy_os.redis_memory import RedisShortTermMemory
+from empathy_software_plugin.wizards.base_wizard import BaseWizard
 
 
 class MockWizard(BaseWizard):

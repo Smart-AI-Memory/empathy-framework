@@ -41,6 +41,8 @@ from typing import Any
 
 import structlog
 
+from empathy_os.config import _validate_file_path
+
 from .security.audit_logger import AuditEvent, AuditLogger
 from .security.pii_scrubber import PIIScrubber
 from .security.secrets_detector import SecretsDetector
@@ -303,7 +305,8 @@ class MemDocsStorage:
 
             pattern_data = {"pattern_id": pattern_id, "content": content, "metadata": metadata}
 
-            with open(pattern_file, "w", encoding="utf-8") as f:
+            validated_pattern_file = _validate_file_path(str(pattern_file))
+            with open(validated_pattern_file, "w", encoding="utf-8") as f:
                 json.dump(pattern_data, f, indent=2)
 
             logger.debug("pattern_stored", pattern_id=pattern_id)
@@ -1323,7 +1326,8 @@ class LongTermMemory:
 
             # Store to JSON file
             file_path = self.storage_path / f"{key}.json"
-            with file_path.open("w", encoding="utf-8") as f:
+            validated_file_path = _validate_file_path(str(file_path))
+            with validated_file_path.open("w", encoding="utf-8") as f:
                 json.dump(record, f, indent=2)
 
             logger.debug("data_stored", key=key, classification=classification_str)

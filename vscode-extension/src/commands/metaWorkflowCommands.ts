@@ -77,8 +77,9 @@ async function executeMetaWorkflowJson(
         cwd = path.dirname(cwd);
     }
 
+    // v4.6.3: Use 'empathy' CLI directly
     const args = [
-        '-m', 'empathy_os.cli_unified', 'meta-workflow', 'run', templateId,
+        'meta-workflow', 'run', templateId,
         '--real', '--json'
     ];
 
@@ -87,7 +88,7 @@ async function executeMetaWorkflowJson(
     }
 
     return new Promise((resolve, reject) => {
-        cp.execFile(pythonPath, args, {
+        cp.execFile('empathy', args, {
             cwd: cwd,
             maxBuffer: 10 * 1024 * 1024, // 10MB buffer
             timeout: 600000 // 10 minute timeout for complex workflows
@@ -227,17 +228,15 @@ export async function showMetaWorkflowReport(extensionUri: vscode.Uri): Promise<
         return;
     }
 
-    const config = vscode.workspace.getConfiguration('empathy');
-    const pythonPath = config.get<string>('pythonPath', 'python');
-
     let cwd = workspaceFolders[0].uri.fsPath;
     if (cwd.endsWith('vscode-extension')) {
         cwd = path.dirname(cwd);
     }
 
     // Get list of runs
+    // v4.6.3: Use 'empathy' CLI directly
     const runs = await new Promise<string[]>((resolve) => {
-        cp.execFile(pythonPath, ['-m', 'empathy_os.cli_unified', 'meta-workflow', 'list-runs', '--json'], {
+        cp.execFile('empathy', ['meta-workflow', 'list-runs', '--json'], {
             cwd: cwd,
             maxBuffer: 1024 * 1024
         }, (error, stdout) => {

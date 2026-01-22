@@ -20,6 +20,7 @@ from importlib.metadata import version as get_version
 from pathlib import Path
 
 from empathy_os import EmpathyConfig, EmpathyOS, load_config
+from empathy_os.config import _validate_file_path
 from empathy_os.cost_tracker import cmd_costs
 from empathy_os.dashboard import cmd_dashboard
 from empathy_os.discovery import show_tip_if_available
@@ -74,54 +75,6 @@ logger = get_logger(__name__)
 
 
 # =============================================================================
-# SECURITY UTILITIES
-# =============================================================================
-
-
-def _validate_file_path(path: str, allowed_dir: str | None = None) -> Path:
-    """Validate file path to prevent path traversal and arbitrary writes.
-
-    Args:
-        path: Path to validate
-        allowed_dir: Optional directory that must contain the path
-
-    Returns:
-        Resolved absolute Path object
-
-    Raises:
-        ValueError: If path is invalid or outside allowed directory
-
-    """
-    if not path or not isinstance(path, str):
-        raise ValueError("path must be a non-empty string")
-
-    # Check for null bytes
-    if "\x00" in path:
-        raise ValueError("path contains null bytes")
-
-    try:
-        # Resolve to absolute path
-        resolved = Path(path).resolve()
-    except (OSError, RuntimeError) as e:
-        raise ValueError(f"Invalid path: {e}")
-
-    # Check if within allowed directory
-    if allowed_dir:
-        try:
-            allowed = Path(allowed_dir).resolve()
-            resolved.relative_to(allowed)
-        except ValueError:
-            raise ValueError(f"path must be within {allowed_dir}")
-
-    # Check for dangerous system paths
-    dangerous_paths = ["/etc", "/sys", "/proc", "/dev"]
-    for dangerous in dangerous_paths:
-        if str(resolved).startswith(dangerous):
-            raise ValueError(f"Cannot write to system directory: {dangerous}")
-
-    return resolved
-
-
 # =============================================================================
 # CHEATSHEET DATA - Quick reference for all commands
 # =============================================================================
@@ -363,7 +316,14 @@ TIPS:
 
 
 def cmd_version(args):
-    """Display version information"""
+    """Display version information for Empathy Framework.
+
+    Args:
+        args: Namespace object from argparse (no additional attributes used).
+
+    Returns:
+        None: Prints version, copyright, and license information to stdout.
+    """
     logger.info("Displaying version information")
     try:
         version = get_version("empathy")
@@ -378,7 +338,16 @@ def cmd_version(args):
 
 
 def cmd_cheatsheet(args):
-    """Display quick reference cheatsheet for all commands."""
+    """Display quick reference cheatsheet for all commands.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - category (str | None): Specific category to show (e.g., 'daily-workflow').
+            - compact (bool): If True, show commands only without descriptions.
+
+    Returns:
+        None: Prints formatted cheatsheet to stdout.
+    """
     category = getattr(args, "category", None)
     compact = getattr(args, "compact", False)
 
@@ -421,7 +390,18 @@ def cmd_cheatsheet(args):
 
 
 def cmd_onboard(args):
-    """Interactive onboarding tutorial for new users."""
+    """Interactive onboarding tutorial for new users.
+
+    Guides users through setup steps: init, learn, sync-claude, health check.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - step (int | None): Jump to specific tutorial step (1-5).
+            - reset (bool): If True, reset onboarding progress.
+
+    Returns:
+        None: Prints tutorial content and tracks progress.
+    """
     from empathy_os.discovery import get_engine
 
     step = getattr(args, "step", None)
@@ -579,7 +559,6 @@ for a quick reference of all commands.
 
 def _file_exists(path: str) -> bool:
     """Check if a file exists."""
-    from pathlib import Path
 
     return Path(path).exists()
 
@@ -630,7 +609,17 @@ def _show_achievements(engine) -> None:
 
 
 def cmd_explain(args):
-    """Show detailed explanation for a command."""
+    """Show detailed explanation for a command.
+
+    Provides in-depth documentation about how specific commands work.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - command (str): Command name to explain (e.g., 'morning', 'ship').
+
+    Returns:
+        None: Prints detailed explanation to stdout.
+    """
     command = args.command
 
     if command in EXPLAIN_CONTENT:
@@ -644,7 +633,16 @@ def cmd_explain(args):
 
 
 def cmd_achievements(args):
-    """Show user achievements and progress."""
+    """Show user achievements and progress.
+
+    Displays gamification stats including unlocked achievements and usage streaks.
+
+    Args:
+        args: Namespace object from argparse (no additional attributes used).
+
+    Returns:
+        None: Prints achievements and progress to stdout.
+    """
     from empathy_os.discovery import get_engine
 
     engine = get_engine()
@@ -686,7 +684,20 @@ def cmd_achievements(args):
 
 
 def cmd_tier_recommend(args):
-    """Get intelligent tier recommendation for a bug/task."""
+    """Get intelligent tier recommendation for a bug/task.
+
+    Analyzes bug description and historical patterns to recommend
+    the most cost-effective tier (HAIKU/SONNET/OPUS).
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - description (str): Bug or task description to analyze.
+            - files (str | None): Comma-separated list of affected files.
+            - complexity (str | None): Complexity hint (low/medium/high).
+
+    Returns:
+        None: Prints tier recommendation with confidence and expected cost.
+    """
     from empathy_os.tier_recommender import TierRecommender
 
     recommender = TierRecommender()
@@ -731,7 +742,16 @@ def cmd_tier_recommend(args):
 
 
 def cmd_tier_stats(args):
-    """Show tier pattern learning statistics."""
+    """Show tier pattern learning statistics.
+
+    Displays statistics about collected patterns and tier distribution.
+
+    Args:
+        args: Namespace object from argparse (no additional attributes used).
+
+    Returns:
+        None: Prints tier statistics, savings percentages, and bug type distribution.
+    """
     from empathy_os.tier_recommender import TierRecommender
 
     recommender = TierRecommender()
@@ -782,6 +802,18 @@ def cmd_orchestrate(args):
 
     Orchestrates teams of agents to accomplish complex tasks through
     intelligent composition patterns.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - workflow (str): Orchestration workflow name.
+            - path (str): Target path for orchestration.
+            - mode (str | None): Execution mode (e.g., 'daily', 'weekly', 'release').
+            - json (bool): If True, output as JSON format.
+            - dry_run (bool): If True, show plan without executing.
+            - verbose (bool): If True, show detailed output.
+
+    Returns:
+        int: 0 on success, 1 on failure.
     """
     import asyncio
     import json
@@ -942,10 +974,20 @@ def cmd_orchestrate(args):
 
 
 def cmd_init(args):
-    """Initialize a new Empathy Framework project
+    """Initialize a new Empathy Framework project.
+
+    Creates a configuration file with sensible defaults.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - format (str): Output format ('yaml' or 'json').
+            - output (str | None): Output file path.
+
+    Returns:
+        None: Creates configuration file at specified path.
 
     Raises:
-        ValueError: If output path is invalid or unsafe
+        ValueError: If output path is invalid or unsafe.
     """
     config_format = args.format
     output_path = args.output or f"empathy.config.{config_format}"
@@ -974,7 +1016,17 @@ def cmd_init(args):
 
 
 def cmd_validate(args):
-    """Validate a configuration file"""
+    """Validate a configuration file.
+
+    Loads and validates the specified configuration file.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - config (str): Path to configuration file to validate.
+
+    Returns:
+        None: Prints validation result. Exits with code 1 on failure.
+    """
     filepath = args.config
     logger.info(f"Validating configuration file: {filepath}")
 
@@ -1006,7 +1058,17 @@ def cmd_validate(args):
 
 
 def cmd_info(args):
-    """Display information about the framework"""
+    """Display information about the framework.
+
+    Shows configuration, persistence, and feature status.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - config (str | None): Optional path to configuration file.
+
+    Returns:
+        None: Prints framework information to stdout.
+    """
     config_file = args.config
     logger.info("Displaying framework information")
 
@@ -1036,7 +1098,16 @@ def cmd_info(args):
 
 
 def cmd_patterns_list(args):
-    """List patterns in a pattern library"""
+    """List patterns in a pattern library.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - library (str): Path to pattern library file.
+            - format (str): Library format ('json' or 'sqlite').
+
+    Returns:
+        None: Prints pattern list to stdout. Exits with code 1 on failure.
+    """
     filepath = args.library
     format_type = args.format
     logger.info(f"Listing patterns from library: {filepath} (format: {format_type})")
@@ -1072,10 +1143,20 @@ def cmd_patterns_list(args):
 
 
 def cmd_patterns_export(args):
-    """Export patterns from one format to another
+    """Export patterns from one format to another.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - input (str): Input file path.
+            - output (str): Output file path.
+            - input_format (str): Input format ('json' or 'sqlite').
+            - output_format (str): Output format ('json' or 'sqlite').
+
+    Returns:
+        None: Exports patterns to output file. Exits with code 1 on failure.
 
     Raises:
-        ValueError: If output path is invalid
+        ValueError: If output path is invalid or unsafe.
     """
     input_file = args.input
     input_format = args.input_format
@@ -1138,7 +1219,24 @@ def cmd_patterns_export(args):
 
 
 def cmd_patterns_resolve(args):
-    """Resolve investigating bug patterns with root cause and fix."""
+    """Resolve investigating bug patterns with root cause and fix.
+
+    Updates pattern status and adds resolution information.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - pattern_id (str | None): Pattern ID to resolve.
+            - root_cause (str | None): Root cause description.
+            - fix (str | None): Fix description.
+            - fix_code (str | None): Code snippet of the fix.
+            - time (int | None): Resolution time in minutes.
+            - status (str): New status ('resolved', 'wont_fix', etc.).
+            - patterns_dir (str): Patterns directory path.
+            - commit (str | None): Related commit hash.
+
+    Returns:
+        None: Updates pattern and prints result. Exits with code 1 on failure.
+    """
     from empathy_llm_toolkit.pattern_resolver import PatternResolver
 
     resolver = PatternResolver(args.patterns_dir)
@@ -1194,7 +1292,24 @@ def cmd_patterns_resolve(args):
 
 
 def cmd_status(args):
-    """Session status assistant - prioritized project status report."""
+    """Session status assistant - prioritized project status report.
+
+    Collects and displays project status including patterns, git context,
+    and health metrics with priority scoring.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - patterns_dir (str): Path to patterns directory (default: ./patterns).
+            - project_root (str): Project root directory (default: .).
+            - inactivity (int): Minutes of inactivity before showing status.
+            - full (bool): If True, show all items without limit.
+            - json (bool): If True, output as JSON format.
+            - select (int | None): Select specific item for action prompt.
+            - force (bool): If True, show status even with recent activity.
+
+    Returns:
+        None: Prints prioritized status report or JSON output.
+    """
     from empathy_llm_toolkit.session_status import SessionStatusCollector
 
     config = {"inactivity_minutes": args.inactivity}
@@ -1237,7 +1352,21 @@ def cmd_status(args):
 
 
 def cmd_review(args):
-    """Pattern-based code review against historical bugs."""
+    """Pattern-based code review against historical bugs.
+
+    Analyzes code changes against learned patterns to identify potential issues.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - files (list[str]): Files to review (default: recent changes).
+            - staged (bool): If True, review staged changes only.
+            - severity (str): Minimum severity threshold for findings.
+            - patterns_dir (str): Path to patterns directory.
+            - json (bool): If True, output as JSON format.
+
+    Returns:
+        None: Prints review findings and recommendations.
+    """
     import asyncio
 
     from empathy_software_plugin.wizards.code_review_wizard import CodeReviewWizard
@@ -1272,7 +1401,27 @@ def cmd_review(args):
 
 
 def cmd_health(args):
-    """Code health assistant - run health checks and auto-fix issues."""
+    """Code health assistant - run health checks and auto-fix issues.
+
+    Runs comprehensive health checks including linting, type checking,
+    and formatting with optional auto-fix capability.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - check (str | None): Specific check to run (lint/type/format/test).
+            - deep (bool): If True, run comprehensive checks.
+            - fix (bool): If True, auto-fix issues where possible.
+            - threshold (str): Severity threshold for issues.
+            - project_root (str): Project root directory.
+            - patterns_dir (str): Path to patterns directory.
+            - details (bool): If True, show detailed issue list.
+            - compare (str | None): Compare against historical baseline.
+            - export (str | None): Export results to file.
+            - json (bool): If True, output as JSON format.
+
+    Returns:
+        None: Prints health check results and optionally fixes issues.
+    """
     import asyncio
 
     from empathy_llm_toolkit.code_health import (
@@ -1399,7 +1548,16 @@ def cmd_health(args):
 
 
 def cmd_metrics_show(args):
-    """Display metrics for a user"""
+    """Display metrics for a user.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - user (str): User ID to retrieve metrics for.
+            - db (str): Path to metrics database (default: ./metrics.db).
+
+    Returns:
+        None: Prints user metrics to stdout. Exits with code 1 on failure.
+    """
     db_path = args.db
     user_id = args.user
 
@@ -1442,7 +1600,15 @@ def cmd_metrics_show(args):
 
 
 def cmd_state_list(args):
-    """List saved user states"""
+    """List saved user states.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - state_dir (str): Directory containing state files.
+
+    Returns:
+        None: Prints list of users with saved states.
+    """
     state_dir = args.state_dir
 
     logger.info(f"Listing saved user states from: {state_dir}")
@@ -1461,7 +1627,19 @@ def cmd_state_list(args):
 
 
 def cmd_run(args):
-    """Interactive REPL for testing empathy interactions"""
+    """Interactive REPL for testing empathy interactions.
+
+    Starts an interactive session for testing empathy levels and features.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - config (str | None): Path to configuration file.
+            - user_id (str | None): User ID (default: cli_user).
+            - level (int): Target empathy level (1-5).
+
+    Returns:
+        None: Runs interactive REPL until user exits.
+    """
     config_file = args.config
     user_id = args.user_id or "cli_user"
     level = args.level
@@ -1594,7 +1772,20 @@ def cmd_run(args):
 
 
 def cmd_inspect(args):
-    """Unified inspection command for patterns, metrics, and state"""
+    """Unified inspection command for patterns, metrics, and state.
+
+    Inspect various framework data including patterns, user metrics, and states.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - type (str): What to inspect ('patterns', 'metrics', or 'state').
+            - user_id (str | None): Filter by user ID.
+            - db (str | None): Database path (default: .empathy/patterns.db).
+            - state_dir (str | None): State directory for state inspection.
+
+    Returns:
+        None: Prints inspection results. Exits with code 1 on failure.
+    """
     inspect_type = args.type
     user_id = args.user_id
     db_path = args.db or ".empathy/patterns.db"
@@ -1701,10 +1892,20 @@ def cmd_inspect(args):
 
 
 def cmd_export(args):
-    """Export patterns to file for sharing/backup
+    """Export patterns to file for sharing/backup.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - output (str): Output file path.
+            - user_id (str | None): Filter patterns by user ID.
+            - db (str | None): Source database path.
+            - format (str): Output format ('json').
+
+    Returns:
+        None: Exports patterns to file. Exits with code 1 on failure.
 
     Raises:
-        ValueError: If output path is invalid
+        ValueError: If output path is invalid or unsafe.
     """
     output_file = args.output
     user_id = args.user_id
@@ -1770,7 +1971,18 @@ def cmd_export(args):
 
 
 def cmd_import(args):
-    """Import patterns from file (local dev only - SQLite/JSON)"""
+    """Import patterns from file (local dev only - SQLite/JSON).
+
+    Merges imported patterns into existing pattern library.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - input (str): Input file path.
+            - db (str | None): Target database path (default: .empathy/patterns.db).
+
+    Returns:
+        None: Imports and merges patterns. Exits with code 1 on failure.
+    """
     input_file = args.input
     db_path = args.db or ".empathy/patterns.db"
 
@@ -1833,7 +2045,16 @@ def cmd_import(args):
 
 
 def cmd_wizard(args):
-    """Interactive setup wizard"""
+    """Interactive setup wizard.
+
+    Guides user through initial framework configuration step by step.
+
+    Args:
+        args: Namespace object from argparse (no additional attributes used).
+
+    Returns:
+        None: Creates empathy.config.yml with user's choices.
+    """
     print("🧙 Empathy Framework Setup Wizard")
     print("=" * 50)
     print("\nI'll help you set up your Empathy Framework configuration.\n")
@@ -1942,10 +2163,11 @@ metrics_enabled: {str(config["metrics_enabled"]).lower()}
 llm_provider: "{llm_provider}"
 """
 
-    with open(output_file, "w") as f:
+    validated_output = _validate_file_path(output_file)
+    with open(validated_output, "w") as f:
         f.write(yaml_content)
 
-    print(f"  ✓ Created {output_file}")
+    print(f"  ✓ Created {validated_output}")
 
     print("\n" + "=" * 50)
     print("✅ Setup complete!")
@@ -1966,14 +2188,28 @@ llm_provider: "{llm_provider}"
 
 
 def cmd_provider_hybrid(args):
-    """Configure hybrid mode - pick best models for each tier."""
+    """Configure hybrid mode - pick best models for each tier.
+
+    Args:
+        args: Namespace object from argparse (no additional attributes used).
+
+    Returns:
+        None: Launches interactive tier configuration.
+    """
     from empathy_os.models.provider_config import configure_hybrid_interactive
 
     configure_hybrid_interactive()
 
 
 def cmd_provider_show(args):
-    """Show current provider configuration."""
+    """Show current provider configuration.
+
+    Args:
+        args: Namespace object from argparse (no additional attributes used).
+
+    Returns:
+        None: Prints provider configuration and model mappings.
+    """
     from empathy_os.models.provider_config import ProviderConfig
     from empathy_os.workflows.config import WorkflowConfig
 
@@ -2012,9 +2248,15 @@ def cmd_provider_show(args):
 
 
 def cmd_provider_set(args):
-    """Set default provider."""
-    from pathlib import Path
+    """Set default provider.
 
+    Args:
+        args: Namespace object from argparse with attributes:
+            - name (str): Provider name to set as default.
+
+    Returns:
+        None: Saves provider to .empathy/workflows.yaml.
+    """
     import yaml
 
     provider = args.name
@@ -2030,11 +2272,12 @@ def cmd_provider_set(args):
 
     config["default_provider"] = provider
 
-    with open(workflows_path, "w") as f:
+    validated_workflows_path = _validate_file_path(str(workflows_path))
+    with open(validated_workflows_path, "w") as f:
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
     print(f"✓ Default provider set to: {provider}")
-    print(f"  Saved to: {workflows_path}")
+    print(f"  Saved to: {validated_workflows_path}")
 
     if provider == "hybrid":
         print("\n  Tip: Run 'empathy provider hybrid' to customize tier models")
@@ -2043,11 +2286,20 @@ def cmd_provider_set(args):
 def cmd_sync_claude(args):
     """Sync patterns to Claude Code rules directory.
 
+    Converts learned patterns into Claude Code markdown rules.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - patterns_dir (str): Source patterns directory.
+            - output_dir (str): Target Claude Code rules directory.
+
+    Returns:
+        int: 0 on success, 1 on failure.
+
     Raises:
-        ValueError: If output path is invalid
+        ValueError: If output path is invalid or unsafe.
     """
     import json as json_mod
-    from pathlib import Path
 
     patterns_dir = Path(args.patterns_dir)
     # Validate output directory path
@@ -2246,7 +2498,24 @@ def _extract_workflow_content(final_output):
 
 
 def cmd_workflow(args):
-    """Multi-model workflow management and execution."""
+    """Multi-model workflow management and execution.
+
+    Supports listing, describing, and running workflows with tier-based models.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - action (str): Action to perform ('list', 'describe', 'run').
+            - name (str | None): Workflow name (for describe/run).
+            - input (str | None): JSON input for workflow execution.
+            - provider (str | None): LLM provider override.
+            - json (bool): If True, output as JSON format.
+            - use_recommended_tier (bool): Enable tier fallback.
+            - write_tests (bool): For test-gen, write tests to files.
+            - output_dir (str | None): For test-gen, output directory.
+
+    Returns:
+        int | None: 0 on success, 1 on failure, None for list action.
+    """
     import asyncio
     import json as json_mod
 
@@ -2331,15 +2600,27 @@ def cmd_workflow(args):
                 wf_config = WorkflowConfig.load()
                 provider = wf_config.default_provider
 
-            # Initialize workflow with tier fallback if requested
+            # Initialize workflow with provider and optional tier fallback
+            # Note: Not all workflows support enable_tier_fallback, so we check first
+            import inspect
             use_tier_fallback = getattr(args, "use_recommended_tier", False)
-            workflow_kwargs = {
-                "provider": provider,
-                "enable_tier_fallback": use_tier_fallback,
-            }
+
+            # Get the workflow's __init__ signature to know what params it accepts
+            init_sig = inspect.signature(workflow_cls.__init__)
+            init_params = set(init_sig.parameters.keys())
+
+            workflow_kwargs = {}
+
+            # Add provider if supported
+            if "provider" in init_params:
+                workflow_kwargs["provider"] = provider
+
+            # Add enable_tier_fallback only if the workflow supports it
+            if "enable_tier_fallback" in init_params and use_tier_fallback:
+                workflow_kwargs["enable_tier_fallback"] = use_tier_fallback
 
             # Add health-check specific parameters
-            if name == "health-check":
+            if name == "health-check" and "health_score_threshold" in init_params:
                 health_score_threshold = getattr(args, "health_score_threshold", 100)
                 workflow_kwargs["health_score_threshold"] = health_score_threshold
 
@@ -2543,8 +2824,9 @@ def cmd_workflow(args):
 
         # Create config directory and file
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(create_example_config())
-        print(f"✓ Created workflow config: {config_path}")
+        validated_config_path = _validate_file_path(str(config_path))
+        validated_config_path.write_text(create_example_config())
+        print(f"✓ Created workflow config: {validated_config_path}")
         print("\nEdit this file to customize:")
         print("  - Default provider (anthropic, openai, ollama)")
         print("  - Per-workflow provider overrides")
@@ -2563,7 +2845,19 @@ def cmd_workflow(args):
 
 
 def cmd_frameworks(args):
-    """List and manage agent frameworks."""
+    """List and manage agent frameworks.
+
+    Displays available agent frameworks with their capabilities and recommendations.
+
+    Args:
+        args: Namespace object from argparse with attributes:
+            - all (bool): If True, show all frameworks including experimental.
+            - recommend (str | None): Use case for framework recommendation.
+            - json (bool): If True, output as JSON format.
+
+    Returns:
+        int: 0 on success, 1 on failure.
+    """
     import json as json_mod
 
     try:

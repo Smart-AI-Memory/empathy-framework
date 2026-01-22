@@ -441,11 +441,24 @@ def workflow_list():
 @workflow_app.command("run")
 def workflow_run(
     name: str = typer.Argument(..., help="Workflow name"),
-    path: Path = Path("."),
+    path: Path = typer.Option(Path("."), "--path", "-p", help="Target path for workflow"),
+    input_json: str = typer.Option(None, "--input", "-i", help="JSON input for workflow (overrides --path)"),
     use_recommended_tier: bool = False,
     health_score_threshold: int = 95,
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ):
-    """Run a multi-model workflow."""
+    """Run a multi-model workflow.
+
+    Examples:
+        empathy workflow run code-review --path ./src
+        empathy workflow run test-gen --input '{"path": ".", "file_types": [".py"]}'
+    """
+    # Determine input JSON - explicit --input takes precedence over --path
+    if input_json:
+        workflow_input = input_json
+    else:
+        workflow_input = f'{{"path": "{path}"}}'
+
     cmd = [
         sys.executable,
         "-m",
@@ -454,7 +467,7 @@ def workflow_run(
         "run",
         name,
         "--input",
-        f'{{"path": "{path}"}}',
+        workflow_input,
     ]
 
     if use_recommended_tier:
@@ -462,6 +475,9 @@ def workflow_run(
 
     if health_score_threshold != 95:
         cmd.extend(["--health-score-threshold", str(health_score_threshold)])
+
+    if json_output:
+        cmd.append("--json")
 
     subprocess.run(cmd, check=False)
 

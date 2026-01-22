@@ -105,10 +105,11 @@ class AnthropicProvider(BaseLLMProvider):
             )
 
         # Lazy import to avoid requiring anthropic if not used
+        # v4.6.3: Use AsyncAnthropic for true async I/O (prevents event loop blocking)
         try:
             import anthropic
 
-            self.client = anthropic.Anthropic(api_key=api_key)
+            self.client = anthropic.AsyncAnthropic(api_key=api_key)
         except ImportError as e:
             raise ImportError(
                 "anthropic package required. Install with: pip install anthropic",
@@ -169,8 +170,8 @@ class AnthropicProvider(BaseLLMProvider):
         # Add any additional kwargs
         api_kwargs.update(kwargs)
 
-        # Call Anthropic API
-        response = self.client.messages.create(**api_kwargs)  # type: ignore[call-overload]
+        # Call Anthropic API (async with AsyncAnthropic)
+        response = await self.client.messages.create(**api_kwargs)  # type: ignore[call-overload]
 
         # Extract thinking content if present
         thinking_content = None

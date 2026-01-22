@@ -329,6 +329,7 @@ class WorkflowVisualizer:
             new_stages.append(StageSpec(
                 id=stage_node.node_id,
                 name=stage_node.label,
+                description=stage_node.data.get("description", f"Stage: {stage_node.label}"),
                 agent_ids=agent_ids,
                 depends_on=dependencies,
                 parallel=stage_node.data.get("parallel", False),
@@ -383,10 +384,14 @@ class ASCIIVisualizer:
         # Agents summary
         lines.append(self._box("Agents"))
         for agent in blueprint.agents:
-            tools = ", ".join(t.tool_id for t in agent.tools[:3])
-            if len(agent.tools) > 3:
-                tools += f" (+{len(agent.tools) - 3} more)"
-            lines.append(f"  [{agent.role.value[:3].upper()}] {agent.name}")
+            # Access tools via spec since AgentBlueprint wraps AgentSpec
+            agent_tools = agent.spec.tools if hasattr(agent, "spec") else []
+            tools = ", ".join(t.id for t in agent_tools[:3])
+            if len(agent_tools) > 3:
+                tools += f" (+{len(agent_tools) - 3} more)"
+            agent_role = agent.spec.role if hasattr(agent, "spec") else agent.role
+            agent_name = agent.spec.name if hasattr(agent, "spec") else agent.name
+            lines.append(f"  [{agent_role.value[:3].upper()}] {agent_name}")
             lines.append(f"       Tools: {tools}")
         lines.append("")
 

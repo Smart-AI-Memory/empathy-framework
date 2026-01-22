@@ -347,9 +347,6 @@ export class TestGeneratorPanel {
 
         this._panel.webview.postMessage({ type: 'scanning', targetPath });
 
-        const config = vscode.workspace.getConfiguration('empathy');
-        const pythonPath = config.get<string>('pythonPath', 'python');
-
         // Get configurable limits from settings with sensible defaults
         const testGenConfig = vscode.workspace.getConfiguration('empathy.testGen');
         const inputData = {
@@ -369,13 +366,14 @@ export class TestGeneratorPanel {
         };
 
         // Run test-gen workflow identify stage
+        // v4.6.3: Use 'empathy' CLI directly
         const args = [
-            '-m', 'empathy_os.cli', 'workflow', 'run', 'test-gen',
+            'workflow', 'run', 'test-gen',
             '--input', JSON.stringify(inputData),
             '--json'
         ];
 
-        this._activeProcess = cp.execFile(pythonPath, args, {
+        this._activeProcess = cp.execFile('empathy', args, {
             cwd: workspaceFolder,
             maxBuffer: 5 * 1024 * 1024,
             timeout: 120000
@@ -455,12 +453,10 @@ export class TestGeneratorPanel {
 
         this._panel.webview.postMessage({ type: 'analyzing', files: selectedFiles });
 
-        const config = vscode.workspace.getConfiguration('empathy');
-        const pythonPath = config.get<string>('pythonPath', 'python');
-
         // Run test-gen workflow with analyze stage focus
+        // v4.6.3: Use 'empathy' CLI directly
         const args = [
-            '-m', 'empathy_os.cli', 'workflow', 'run', 'test-gen',
+            'workflow', 'run', 'test-gen',
             '--input', JSON.stringify({
                 path: this._session.targetPath,
                 files: selectedFiles,
@@ -469,7 +465,7 @@ export class TestGeneratorPanel {
             '--json'
         ];
 
-        this._activeProcess = cp.execFile(pythonPath, args, {
+        this._activeProcess = cp.execFile('empathy', args, {
             cwd: workspaceFolder,
             maxBuffer: 5 * 1024 * 1024,
             timeout: 180000
@@ -535,12 +531,10 @@ export class TestGeneratorPanel {
 
         this._panel.webview.postMessage({ type: 'generating', targets: targetsList });
 
-        const config = vscode.workspace.getConfiguration('empathy');
-        const pythonPath = config.get<string>('pythonPath', 'python');
-
         // Run full test-gen workflow
+        // v4.6.3: Use 'empathy' CLI directly
         const args = [
-            '-m', 'empathy_os.cli', 'workflow', 'run', 'test-gen',
+            'workflow', 'run', 'test-gen',
             '--input', JSON.stringify({
                 path: this._session.targetPath,
                 file_types: ['.py']
@@ -548,7 +542,7 @@ export class TestGeneratorPanel {
             '--json'
         ];
 
-        this._activeProcess = cp.execFile(pythonPath, args, {
+        this._activeProcess = cp.execFile('empathy', args, {
             cwd: workspaceFolder,
             maxBuffer: 10 * 1024 * 1024,
             timeout: 300000 // 5 minutes for generation

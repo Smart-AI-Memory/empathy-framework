@@ -70,7 +70,7 @@ class CollaborationState:
 
 
 class EmpathyOS:
-    """Empathy Operating System for AI-Human Collaboration
+    """Empathy Operating System for AI-Human Collaboration.
 
     Integrates:
     - 5-level Empathy Maturity Model
@@ -82,9 +82,42 @@ class EmpathyOS:
     Goal: Enable AI to operate at Levels 3-4 (Proactive/Anticipatory)
 
     Example:
-        >>> empathy = EmpathyOS(user_id="developer_123", target_level=4)
-        >>> result = await empathy.level_4_anticipatory(system_trajectory)
-        >>> print(result["bottlenecks_predicted"])
+        Basic usage with empathy levels::
+
+            from empathy_os import EmpathyOS
+
+            # Create instance targeting Level 4 (Anticipatory)
+            empathy = EmpathyOS(user_id="developer_123", target_level=4)
+
+            # Level 1 - Reactive response
+            response = empathy.level_1_reactive(
+                user_input="How do I optimize database queries?",
+                context={"domain": "software"}
+            )
+
+            # Level 2 - Guided with follow-up questions
+            response = empathy.level_2_guided(
+                user_input="I need help with my code",
+                context={"task": "debugging"},
+                history=[]
+            )
+
+        Memory operations::
+
+            # Stash working data (short-term)
+            empathy.stash("current_task", {"status": "debugging"})
+
+            # Retrieve later
+            task = empathy.retrieve("current_task")
+
+            # Persist patterns (long-term)
+            result = empathy.persist_pattern(
+                content="Query optimization technique",
+                pattern_type="technique"
+            )
+
+            # Recall patterns
+            pattern = empathy.recall_pattern(result["pattern_id"])
 
     """
 

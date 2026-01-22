@@ -22,6 +22,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -332,11 +334,12 @@ class LearningStore:
         }
 
         try:
-            with self.file_path.open("w") as f:
+            validated_path = _validate_file_path(str(self.file_path))
+            with validated_path.open("w") as f:
                 json.dump(data, f, indent=2)
             self._dirty = False
-            logger.info(f"Saved learning data to {self.file_path}")
-        except Exception as e:
+            logger.info(f"Saved learning data to {validated_path}")
+        except (OSError, ValueError) as e:
             logger.exception(f"Failed to save learning data: {e}")
 
     def add_record(self, record: ExecutionRecord) -> None:

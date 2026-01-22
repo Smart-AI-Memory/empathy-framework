@@ -157,7 +157,8 @@ async def _store_wizard_session(wizard_id: str, session_data: dict[str, Any]) ->
                     json.dumps(session_data),  # FIXED: use JSON
                 )
                 return True
-    except Exception:
+    except Exception:  # noqa: BLE001
+        # INTENTIONAL: Graceful degradation - fall back to in-memory storage if Redis fails
         pass
     _wizard_sessions[wizard_id] = session_data
     return True
@@ -174,7 +175,8 @@ async def _get_wizard_session(wizard_id: str) -> dict[str, Any] | None:
                 if session_str:
                     # SECURITY FIX: Use json.loads() instead of ast.literal_eval()
                     return json.loads(session_str)
-    except Exception:
+    except Exception:  # noqa: BLE001
+        # INTENTIONAL: Graceful degradation - fall back to in-memory storage if Redis fails
         pass
     return _wizard_sessions.get(wizard_id)
 

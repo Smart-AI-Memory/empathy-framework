@@ -29,10 +29,12 @@ if spec and spec.loader:
     spec.loader.exec_module(legacy_config)
     EmpathyConfig = legacy_config.EmpathyConfig
     load_config = legacy_config.load_config
+    _validate_file_path = legacy_config._validate_file_path
 else:
     # Fallback if import fails
     EmpathyConfig = None
     load_config = None
+    _validate_file_path = None
 
 # Import XML enhancement configs
 from empathy_os.config.xml_config import (  # noqa: E402
@@ -51,6 +53,7 @@ __all__ = [
     "EmpathyConfig",
     "load_config",
     "YAML_AVAILABLE",
+    "_validate_file_path",
     # XML enhancement configs
     "XMLConfig",
     "OptimizationConfig",

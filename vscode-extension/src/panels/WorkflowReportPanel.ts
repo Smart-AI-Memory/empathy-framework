@@ -239,11 +239,12 @@ export class WorkflowReportPanel {
             const baseArgs = ['-m', 'empathy_os.cli', 'orchestrate', 'health-check', '--mode', 'daily', '--json'];
             return baseArgs;
         } else if (workflow === 'orchestrated-release-prep') {
-            const baseArgs = ['-m', 'empathy_os.cli', 'orchestrate', 'release-prep', '--path', '.', '--json'];
+            // v4.6.3: Use 'empathy' CLI directly
+            const baseArgs = ['orchestrate', 'release-prep', '--path', '.', '--json'];
             return baseArgs;
         } else {
-            // Other workflows use 'workflow run' command
-            const baseArgs = ['-m', 'empathy_os.cli', 'workflow', 'run', workflow];
+            // v4.6.3: Other workflows use 'empathy workflow run' command
+            const baseArgs = ['workflow', 'run', workflow];
 
             // Add input if provided
             if (input) {

@@ -483,17 +483,17 @@ class ConditionEvaluator:
         Returns:
             True if all conditions match
         """
-        for field, condition_spec in predicate.items():
+        for field_name, condition_spec in predicate.items():
             # Handle logical operators
-            if field == "$and":
+            if field_name == "$and":
                 return all(self._evaluate_json(sub, context) for sub in condition_spec)
-            if field == "$or":
+            if field_name == "$or":
                 return any(self._evaluate_json(sub, context) for sub in condition_spec)
-            if field == "$not":
+            if field_name == "$not":
                 return not self._evaluate_json(condition_spec, context)
 
             # Get value from context (supports nested paths like "result.confidence")
-            value = self._get_nested_value(context, field)
+            value = self._get_nested_value(context, field_name)
 
             # Evaluate condition
             if isinstance(condition_spec, dict):

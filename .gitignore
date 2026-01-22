@@ -155,3 +155,19 @@ usage_analysis.json
 FALLBACK_TEST_REPORT.md
 TIER_FALLBACK_TEST_REPORT.md
 .vercel
+
+# macOS Finder duplicate files (created when copying files in Finder)
+* 2.py
+* 2.ts
+* 2.tsx
+* 2.js
+* 2.jsx
+* 2.json
+* 2.md
+* 2.mdx
+* 2.yaml
+* 2.yml
+* 2/
+
+# Coverage parallel test files
+.coverage.*

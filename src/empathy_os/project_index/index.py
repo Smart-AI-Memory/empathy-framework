@@ -12,6 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 from .models import FileRecord, IndexConfig, ProjectSummary
 from .scanner import ProjectScanner
 
@@ -115,10 +117,11 @@ class ProjectIndex:
                 "files": {path: record.to_dict() for path, record in self._records.items()},
             }
 
-            with open(self._index_path, "w", encoding="utf-8") as f:
+            validated_path = _validate_file_path(str(self._index_path))
+            with open(validated_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, default=str)
 
-            logger.info(f"Saved index with {len(self._records)} files to {self._index_path}")
+            logger.info(f"Saved index with {len(self._records)} files to {validated_path}")
 
             # Sync to Redis if enabled
             if self.redis_client and self.config.use_redis:

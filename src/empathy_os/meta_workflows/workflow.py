@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from empathy_llm_toolkit.routing.model_router import ModelRouter, ModelTier
+from empathy_os.config import _validate_file_path
 from empathy_os.meta_workflows.agent_creator import DynamicAgentCreator
 from empathy_os.meta_workflows.form_engine import SocraticFormEngine
 from empathy_os.meta_workflows.models import (
@@ -808,11 +809,13 @@ class MetaWorkflow:
             "run_id": result.run_id,
             "timestamp": result.timestamp,
         }
-        config_file.write_text(json.dumps(config_data, indent=2), encoding="utf-8")
+        validated_config = _validate_file_path(str(config_file))
+        validated_config.write_text(json.dumps(config_data, indent=2), encoding="utf-8")
 
         # Save form responses
         responses_file = run_dir / "form_responses.json"
-        responses_file.write_text(
+        validated_responses = _validate_file_path(str(responses_file))
+        validated_responses.write_text(
             json.dumps(
                 {
                     "template_id": result.form_responses.template_id,
@@ -839,16 +842,19 @@ class MetaWorkflow:
             }
             for agent in result.agents_created
         ]
-        agents_file.write_text(json.dumps(agents_data, indent=2), encoding="utf-8")
+        validated_agents = _validate_file_path(str(agents_file))
+        validated_agents.write_text(json.dumps(agents_data, indent=2), encoding="utf-8")
 
         # Save complete result
         result_file = run_dir / "result.json"
-        result_file.write_text(result.to_json(), encoding="utf-8")
+        validated_result = _validate_file_path(str(result_file))
+        validated_result.write_text(result.to_json(), encoding="utf-8")
 
         # Create human-readable report
         report_file = run_dir / "report.txt"
         report = self._generate_report(result)
-        report_file.write_text(report, encoding="utf-8")
+        validated_report = _validate_file_path(str(report_file))
+        validated_report.write_text(report, encoding="utf-8")
 
         logger.info(f"Saved execution results to: {run_dir}")
         return run_dir

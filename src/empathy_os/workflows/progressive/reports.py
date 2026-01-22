@@ -12,6 +12,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
 from empathy_os.workflows.progressive.core import (
     ProgressiveWorkflowResult,
     Tier,
@@ -139,8 +140,8 @@ def save_results_to_disk(result: ProgressiveWorkflowResult, storage_path: str) -
     task_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        # Use the created task directory
-        validated_dir = task_dir
+        # Validate task directory path for security
+        validated_dir = _validate_file_path(str(task_dir))
 
         # Save summary
         summary = {

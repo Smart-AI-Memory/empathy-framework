@@ -68,8 +68,8 @@ export class WorkflowDiscoveryService {
             throw new Error('No workspace folder found');
         }
 
-        // Run: empathy workflow list --json
-        const { stdout } = await execFile(pythonPath, ['-m', 'empathy_os.cli', 'workflow', 'list', '--json'], {
+        // v4.6.3: Run: empathy workflow list --json
+        const { stdout } = await execFile('empathy', ['workflow', 'list', '--json'], {
             cwd: workspaceFolder,
             timeout: 10000,
         });

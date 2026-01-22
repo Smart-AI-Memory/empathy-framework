@@ -126,6 +126,7 @@ class PRReviewWorkflow:
         diff: str | None = None,
         files_changed: list[str] | None = None,
         target_path: str = ".",
+        target: str | None = None,  # Alias for target_path (compatibility)
         context: dict | None = None,
     ) -> PRReviewResult:
         """Execute comprehensive PR review with both crews.
@@ -134,6 +135,7 @@ class PRReviewWorkflow:
             diff: PR diff content (auto-generated from git if not provided)
             files_changed: List of changed files
             target_path: Path to codebase for security audit
+            target: Alias for target_path (for CLI compatibility)
             context: Additional context
 
         Returns:
@@ -143,6 +145,10 @@ class PRReviewWorkflow:
         start_time = time.time()
         files_changed = files_changed or []
         context = context or {}
+
+        # Support 'target' as alias for 'target_path'
+        if target and target_path == ".":
+            target_path = target
 
         # Auto-generate diff from git if not provided
         if not diff:

@@ -151,9 +151,9 @@ class AgentPerformance:
         if languages:
             for lang in languages:
                 if lang in self.by_language:
-                    l = self.by_language[lang]
-                    if l["uses"] > 0:
-                        scores.append(l["total_score"] / l["uses"])
+                    lang_stats = self.by_language[lang]
+                    if lang_stats["uses"] > 0:
+                        scores.append(lang_stats["total_score"] / lang_stats["uses"])
                         weights.append(1.5)
 
         # Quality focus score
@@ -579,7 +579,7 @@ class AdaptiveAgentGenerator:
             return base_agents
 
         # Reorder and potentially add agents based on feedback
-        agent_scores = {tid: score for tid, score in best_agents}
+        agent_scores = dict(best_agents)
 
         # Score base agents
         scored_base = []

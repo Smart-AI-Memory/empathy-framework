@@ -1,7 +1,7 @@
 # Meta-Workflow System User Guide
 
-**Version:** 4.2.0
-**Last Updated:** 2026-01-17
+**Version:** 4.6.2
+**Last Updated:** 2026-01-21
 
 ---
 
@@ -17,6 +17,7 @@
 8. [Pattern Learning & Analytics](#pattern-learning--analytics)
 9. [Advanced Usage](#advanced-usage)
 10. [Troubleshooting](#troubleshooting)
+11. [Claude Code Skills Integration](#claude-code-skills-integration-v46)
 
 ---
 
@@ -932,6 +933,103 @@ if learner.memory:
 
 ---
 
+## Claude Code Skills Integration (v4.6+)
+
+Starting with v4.6, Empathy Framework integrates directly with Claude Code through slash command skills. These skills provide $0 cost execution using your Claude Max subscription.
+
+### Available Skills
+
+| Skill | Command | Description |
+|-------|---------|-------------|
+| Create Agent | `/create-agent` | Socratic guide for creating custom agents |
+| Create Team | `/create-team` | Create multi-agent teams collaboratively |
+| Release Prep | `/release-prep` | Run release preparation workflow |
+| Test Coverage | `/test-coverage` | Boost test coverage in targeted modules |
+| Test Maintenance | `/test-maintenance` | Fix failing tests and align with code changes |
+| Manage Docs | `/manage-docs` | Analyze documentation health and sync |
+| Feature Overview | `/feature-overview` | Generate feature documentation |
+| Security Scan | `/security-scan` | Run comprehensive security checks |
+| Test | `/test` | Run test suite and report results |
+| Status | `/status` | Show project status summary |
+| Publish | `/publish` | Guide package publishing to PyPI |
+| Init | `/init` | Initialize new Empathy Framework project |
+| Memory | `/memory` | Manage the memory system |
+
+### Using Skills in Claude Code
+
+Skills run entirely within Claude Code using exploratory agents:
+
+```bash
+# In Claude Code, simply type:
+/release-prep
+
+# Claude will:
+# 1. Run pre-release checks (tests, coverage, CHANGELOG)
+# 2. Validate semantic versioning
+# 3. Generate release report
+```
+
+### Skill Configuration
+
+Skills are defined in `.claude/commands/` directory:
+
+```text
+.claude/commands/
+├── create-agent.md      # Agent creation wizard
+├── create-team.md       # Team creation wizard
+├── release-prep.md      # Release preparation
+├── test-coverage.md     # Coverage boosting
+├── manage-docs.md       # Documentation management
+├── security-scan.md     # Security auditing
+└── ...
+```
+
+### Cost Comparison
+
+| Execution Mode | Cost | Speed | Use Case |
+|---------------|------|-------|----------|
+| Claude Code Skills | $0 (Max subscription) | Fast | Development workflow |
+| Meta-workflow (simulated) | $0 | Fast | Testing/validation |
+| Meta-workflow (real) | $0.08-$0.50 | Medium | Production execution |
+
+### Extending Skills
+
+To create a custom skill:
+
+1. Create a markdown file in `.claude/commands/your-skill.md`
+2. Define the skill prompt and instructions
+3. The skill will appear as `/your-skill` in Claude Code
+
+Example skill template:
+
+```markdown
+# /your-skill - Your Skill Name
+
+Brief description of what the skill does.
+
+## Instructions for Claude
+
+When the user invokes /your-skill:
+
+1. First step...
+2. Second step...
+3. Generate report...
+```
+
+### Skill vs Meta-Workflow
+
+| Feature | Claude Code Skills | Meta-Workflows |
+|---------|-------------------|----------------|
+| Cost | $0 | $0-$0.50 |
+| Interactive forms | No | Yes |
+| Pattern learning | Limited | Full |
+| Execution tracking | No | Yes |
+| Best for | Quick dev tasks | Production workflows |
+
+Use skills for rapid development tasks; use meta-workflows for production pipelines that need tracking and analytics.
+
+---
+
 ## Appendix
 
 ### Question Types Reference
@@ -984,6 +1082,6 @@ We welcome contributions! See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelin
 
 ---
 
-**Version:** 4.2.0
-**Last Updated:** 2026-01-17
+**Version:** 4.6.2
+**Last Updated:** 2026-01-21
 **Maintained By:** Empathy Framework Team

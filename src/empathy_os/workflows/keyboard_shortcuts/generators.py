@@ -9,6 +9,8 @@ Generates:
 import json
 from pathlib import Path
 
+from empathy_os.config import _validate_file_path
+
 from .schema import (
     FeatureManifest,
     GeneratedShortcuts,
@@ -36,8 +38,9 @@ class VSCodeKeybindingsGenerator:
         for layout, layout_shortcuts in shortcuts.layouts.items():
             output_file = output_dir / f"{layout.value}.json"
             bindings = self._generate_bindings(shortcuts.manifest, layout_shortcuts)
-            output_file.write_text(json.dumps(bindings, indent=2))
-            generated_files[layout.value] = output_file
+            validated_output = _validate_file_path(str(output_file))
+            validated_output.write_text(json.dumps(bindings, indent=2))
+            generated_files[layout.value] = validated_output
 
         return generated_files
 
@@ -102,14 +105,15 @@ class CLIAliasGenerator:
         if not layout_shortcuts:
             layout_shortcuts = next(iter(shortcuts.layouts.values()), None)
 
+        validated_output = _validate_file_path(str(output_file))
         if not layout_shortcuts:
-            output_file.write_text("# No shortcuts generated\n")
-            return output_file
+            validated_output.write_text("# No shortcuts generated\n")
+            return validated_output
 
         lines = [
             self.BASH_HEADER.format(
                 project_name=shortcuts.manifest.project_name,
-                output_file=output_file.name,
+                output_file=validated_output.name,
                 mnemonic=layout_shortcuts.phrase_mnemonic,
             ),
         ]
@@ -124,8 +128,8 @@ class CLIAliasGenerator:
             short_alias = f"e{shortcut.key}"
             lines.append(f'alias {short_alias}="{cli_alias}"  # {shortcut.mnemonic}')
 
-        output_file.write_text("\n".join(lines))
-        return output_file
+        validated_output.write_text("\n".join(lines))
+        return validated_output
 
     def _find_cli_alias(self, manifest: FeatureManifest, feature_id: str) -> str | None:
         """Find CLI alias for a feature ID."""
@@ -188,9 +192,10 @@ Hold **{prefix}** (Mac: **{mac_prefix}**) then press one key:
         if not layout_shortcuts:
             layout_shortcuts = next(iter(shortcuts.layouts.values()), None)
 
+        validated_output = _validate_file_path(str(output_file))
         if not layout_shortcuts:
-            output_file.write_text("# No shortcuts generated\n")
-            return output_file
+            validated_output.write_text("# No shortcuts generated\n")
+            return validated_output
 
         manifest = shortcuts.manifest
         prefix = manifest.prefix
@@ -207,8 +212,8 @@ Hold **{prefix}** (Mac: **{mac_prefix}**) then press one key:
             full_table=self._generate_full_table(manifest, layout_shortcuts),
         )
 
-        output_file.write_text(content)
-        return output_file
+        validated_output.write_text(content)
+        return validated_output
 
     def _generate_cheatsheet(
         self,

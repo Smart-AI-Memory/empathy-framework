@@ -2,8 +2,8 @@
 
 **Get started with Empathy Framework in 5 minutes**
 
-**Version:** 4.0.0
-**Last Updated:** January 16, 2026
+**Version:** 4.6.2
+**Last Updated:** January 21, 2026
 
 ---
 
@@ -360,7 +360,7 @@ for agent in plan.agents:
 
 ---
 
-**Welcome to Empathy Framework v4.0 - The Meta-Orchestration Era! 🎉**
+**Welcome to Empathy Framework v4.6 - Claude Code Integration Era! 🎉**
 
-**Last Updated:** January 16, 2026
+**Last Updated:** January 21, 2026
 **License:** Fair Source 0.9

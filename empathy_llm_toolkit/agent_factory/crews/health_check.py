@@ -765,7 +765,8 @@ Rules:
                         for node, score in similar
                     ]
                     logger.info(f"Found {memory_hits} similar past health checks")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # INTENTIONAL: Memory Graph is optional - continue health check if unavailable
                 logger.warning(f"Error querying Memory Graph: {e}")
 
         # Build task for the crew to analyze and generate fixes
@@ -782,7 +783,8 @@ Rules:
             if auto_fix:
                 fixes = await self._apply_fixes(fixes, path)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
+            # INTENTIONAL: Analysis failure shouldn't crash - return partial results
             logger.error(f"Health check analysis failed: {e}")
 
         # Calculate health score
@@ -821,7 +823,8 @@ Rules:
                     },
                 )
                 self._graph._save()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # INTENTIONAL: Memory Graph storage is optional - continue without it
                 logger.warning(f"Error storing check in Memory Graph: {e}")
 
         return report
@@ -1166,7 +1169,7 @@ Consider patterns from past fixes.
                         timeout=60,
                     )
                     fix.status = FixStatus.APPLIED if result.returncode == 0 else FixStatus.FAILED
-                except Exception:
+                except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
                     fix.status = FixStatus.FAILED
             else:
                 fix.status = FixStatus.SUGGESTED

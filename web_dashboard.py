@@ -431,6 +431,14 @@ HTML_TEMPLATE = """
         let templates = [];
         let currentTemplate = null;
 
+        // XSS Prevention: Escape HTML entities in user-facing content
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
         async function loadTemplates() {
             try {
                 const response = await fetch('/api/templates');
@@ -467,23 +475,23 @@ HTML_TEMPLATE = """
             };
 
             container.innerHTML = templates.map(template => `
-                <div class="template-card" onclick="showTemplate('${template.id}')">
+                <div class="template-card" onclick="showTemplate('${escapeHtml(template.id)}')">
                     <div class="template-header">
                         <div class="template-icon">${icons[template.id] || '⚙️'}</div>
                         <div class="template-title">
-                            <div class="template-name">${template.name}</div>
-                            <div class="template-id">${template.id}</div>
+                            <div class="template-name">${escapeHtml(template.name)}</div>
+                            <div class="template-id">${escapeHtml(template.id)}</div>
                         </div>
                     </div>
-                    <div class="template-description">${template.description}</div>
+                    <div class="template-description">${escapeHtml(template.description)}</div>
                     <div class="template-meta">
                         <span class="meta-badge">📋 ${template.questions} questions</span>
                         <span class="meta-badge">🤖 ${template.agents} agents</span>
                         <span class="meta-badge cost-range">💰 $${template.cost_min.toFixed(2)}-$${template.cost_max.toFixed(2)}</span>
                     </div>
                     <div class="template-actions">
-                        <button class="btn btn-secondary" onclick="event.stopPropagation(); inspectTemplate('${template.id}')">Inspect</button>
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); runTemplate('${template.id}')">Run</button>
+                        <button class="btn btn-secondary" onclick="event.stopPropagation(); inspectTemplate('${escapeHtml(template.id)}')">Inspect</button>
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); runTemplate('${escapeHtml(template.id)}')">Run</button>
                     </div>
                 </div>
             `).join('');
@@ -499,8 +507,8 @@ HTML_TEMPLATE = """
 
             const questionsHtml = template.form_schema.questions.map((q, i) => `
                 <div class="question-group">
-                    <label class="question-label">${i + 1}. ${q.text}</label>
-                    ${q.help_text ? `<div class="question-help">${q.help_text}</div>` : ''}
+                    <label class="question-label">${i + 1}. ${escapeHtml(q.text)}</label>
+                    ${q.help_text ? `<div class="question-help">${escapeHtml(q.help_text)}</div>` : ''}
                     ${renderQuestionInput(q)}
                 </div>
             `).join('');
@@ -510,11 +518,12 @@ HTML_TEMPLATE = """
         }
 
         function renderQuestionInput(question) {
+            const safeId = escapeHtml(question.id);
             if (question.type === 'single_select') {
                 return `
-                    <select id="q_${question.id}">
+                    <select id="q_${safeId}">
                         <option value="">-- Select --</option>
-                        ${question.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        ${question.options.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('')}
                     </select>
                 `;
             } else if (question.type === 'multi_select') {
@@ -522,22 +531,22 @@ HTML_TEMPLATE = """
                     <div class="checkbox-group">
                         ${question.options.map(opt => `
                             <label class="checkbox-item">
-                                <input type="checkbox" name="q_${question.id}" value="${opt}">
-                                ${opt}
+                                <input type="checkbox" name="q_${safeId}" value="${escapeHtml(opt)}">
+                                ${escapeHtml(opt)}
                             </label>
                         `).join('')}
                     </div>
                 `;
             } else if (question.type === 'boolean') {
                 return `
-                    <select id="q_${question.id}">
+                    <select id="q_${safeId}">
                         <option value="">-- Select --</option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </select>
                 `;
             } else {
-                return `<input type="text" id="q_${question.id}" placeholder="Enter value">`;
+                return `<input type="text" id="q_${safeId}" placeholder="Enter value">`;
             }
         }
 
@@ -626,6 +635,162 @@ def api_template_detail(template_id):
             ]
         }
     })
+
+
+INSPECT_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspect: {{ name }} - Empathy Framework</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .back-link { color: rgba(255,255,255,0.8); text-decoration: none; }
+        .back-link:hover { color: white; }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        .card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--primary); }
+        .meta { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .badge {
+            padding: 0.25rem 0.75rem;
+            background: var(--bg);
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+        .question-item {
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .question-text { font-weight: 600; margin-bottom: 0.5rem; }
+        .question-meta { font-size: 0.875rem; color: var(--text-muted); }
+        .agent-item {
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="back-link">← Back to Dashboard</a>
+            <h1>{{ name }}</h1>
+            <p>{{ description }}</p>
+        </div>
+    </header>
+    <div class="container">
+        <div class="card">
+            <h2>Overview</h2>
+            <div class="meta">
+                <span class="badge">📋 {{ questions|length }} questions</span>
+                <span class="badge">🤖 {{ agents|length }} agents</span>
+                <span class="badge">💰 ${{ "%.2f"|format(cost_min) }}-${{ "%.2f"|format(cost_max) }}</span>
+            </div>
+            <p><strong>Template ID:</strong> <code>{{ template_id }}</code></p>
+        </div>
+
+        <div class="card">
+            <h2>Questions</h2>
+            {% for q in questions %}
+            <div class="question-item">
+                <div class="question-text">{{ loop.index }}. {{ q.text }}</div>
+                <div class="question-meta">
+                    Type: {{ q.type }} |
+                    Required: {{ "Yes" if q.required else "No" }}
+                    {% if q.options %} | Options: {{ q.options|length }}{% endif %}
+                </div>
+                {% if q.help_text %}<div class="question-meta" style="margin-top: 0.5rem;">{{ q.help_text }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card">
+            <h2>Agent Composition Rules</h2>
+            {% for agent in agents %}
+            <div class="agent-item">
+                <strong>{{ agent.agent_type }}</strong>
+                {% if agent.condition %}<div class="question-meta">Condition: {{ agent.condition }}</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+
+@app.route('/inspect/<template_id>')
+def inspect_template(template_id):
+    """Inspect page showing detailed template information."""
+    template = registry.load_template(template_id)
+    if not template:
+        return "Template not found", 404
+
+    return render_template_string(
+        INSPECT_TEMPLATE,
+        template_id=template.template_id,
+        name=template.name,
+        description=template.description,
+        questions=[
+            {
+                'text': q.text,
+                'type': q.type.value,
+                'options': q.options or [],
+                'required': q.required,
+                'help_text': q.help_text,
+            }
+            for q in template.form_schema.questions
+        ],
+        agents=[
+            {
+                'agent_type': rule.agent_type,
+                'condition': rule.condition,
+            }
+            for rule in template.agent_composition_rules
+        ],
+        cost_min=template.estimated_cost_range[0],
+        cost_max=template.estimated_cost_range[1],
+    )
 
 
 if __name__ == '__main__':

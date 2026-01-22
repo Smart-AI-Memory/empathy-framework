@@ -3692,9 +3692,67 @@
         "website/components/Footer.tsx"
       ],
       "source": "git_history"
+    },
+    {
+      "pattern_id": "bug_20260120_4c7c4627",
+      "bug_type": "unknown",
+      "status": "resolved",
+      "root_cause": "fix: Resolve remaining test failures in execution strategies and secrets detection",
+      "fix": "See commit 4c7c4627",
+      "resolved_by": "@geneai",
+      "resolved_at": "2026-01-20",
+      "files_affected": [
+        "tests/test_llm_toolkit_security.py",
+        "tests/unit/orchestration/test_execution_strategies.py"
+      ],
+      "source": "git_history"
+    },
+    {
+      "pattern_id": "bug_20260120_269c1a56",
+      "bug_type": "import_error",
+      "status": "resolved",
+      "root_cause": "fix: Resolve test failures in routing, scanner, and orchestration modules",
+      "fix": "See commit 269c1a56",
+      "resolved_by": "@geneai",
+      "resolved_at": "2026-01-20",
+      "files_affected": [
+        "src/empathy_os/project_index/models.py",
+        ".../orchestration/test_composition_patterns.py",
+        "tests/unit/routing/test_classifier.py"
+      ],
+      "source": "git_history"
+    },
+    {
+      "pattern_id": "bug_20260120_6cee3e2e",
+      "bug_type": "unknown",
+      "status": "resolved",
+      "root_cause": "chore: Update learned patterns from debugging session",
+      "fix": "See commit 6cee3e2e",
+      "resolved_by": "@geneai",
+      "resolved_at": "2026-01-20",
+      "files_affected": [
+        "patterns/debugging.json",
+        "patterns/refactoring_memory.json"
+      ],
+      "source": "git_history"
+    },
+    {
+      "pattern_id": "bug_20260120_dff7feb4",
+      "bug_type": "import_error",
+      "status": "resolved",
+      "root_cause": "fix: Resolve socratic module API mismatches and test alignment",
+      "fix": "See commit dff7feb4",
+      "resolved_by": "@geneai",
+      "resolved_at": "2026-01-20",
+      "files_affected": [
+        "src/empathy_os/socratic/explainer.py",
+        "src/empathy_os/socratic/mcp_server.py",
+        "src/empathy_os/socratic/visual_editor.py"
+      ],
+      "source": "git_history"
     }
   ],
-  "last_updated": "2026-01-20T10:39:56.805750",
+  "last_updated": "2026-01-20T19:50:55.973745",
   "migration_metadata": {
     "migrated_at": "2026-01-07T05:51:07.939260",
     "total_patterns": 64,

@@ -12,6 +12,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 from .base import CacheEntry
 
 logger = logging.getLogger(__name__)
@@ -143,13 +145,14 @@ class CacheStorage:
             }
 
             # Write to disk
-            with open(self.cache_file, "w") as f:
+            validated_path = _validate_file_path(str(self.cache_file))
+            with open(validated_path, "w") as f:
                 json.dump(data, f, indent=2)
 
             logger.debug(f"Saved {len(self._entries)} cache entries to disk")
             return True
 
-        except (OSError, TypeError) as e:
+        except (OSError, TypeError, ValueError) as e:
             logger.error(f"Failed to save cache to disk: {e}")
             return False
 

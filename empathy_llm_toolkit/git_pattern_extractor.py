@@ -217,7 +217,8 @@ class GitPatternExtractor:
                 "author": lines[2],
                 "date": lines[3],
             }
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # INTENTIONAL: Git commands may fail for various reasons (not a repo, detached HEAD, etc.)
             return None
 
     def _get_commit_diff(self, ref1: str, ref2: str) -> str:
@@ -231,7 +232,8 @@ class GitPatternExtractor:
                 timeout=10,
             )
             return result.stdout if result.returncode == 0 else ""
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # INTENTIONAL: Git commands may fail for various reasons (not a repo, no commits, etc.)
             return ""
 
     def _get_staged_diff(self) -> str:
@@ -245,7 +247,8 @@ class GitPatternExtractor:
                 timeout=10,
             )
             return result.stdout if result.returncode == 0 else ""
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # INTENTIONAL: Git commands may fail for various reasons (not a repo, nothing staged, etc.)
             return ""
 
     def _get_git_config(self, key: str) -> str | None:
@@ -259,7 +262,8 @@ class GitPatternExtractor:
                 timeout=5,
             )
             return result.stdout.strip() if result.returncode == 0 else None
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # INTENTIONAL: Git config may fail (not a repo, key not set, etc.)
             return None
 
     def _score_fix_commit(self, message: str) -> float:

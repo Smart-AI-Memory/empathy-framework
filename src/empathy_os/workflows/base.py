@@ -39,6 +39,7 @@ except ImportError:
 
 # Import caching infrastructure
 from empathy_os.cache import BaseCache, auto_setup_cache, create_cache
+from empathy_os.config import _validate_file_path
 from empathy_os.cost_tracker import MODEL_PRICING, CostTracker
 
 # Import unified types from empathy_os.models
@@ -276,7 +277,8 @@ def _save_workflow_run(
     history.append(run)
     history = history[-max_history:]
 
-    with open(path, "w") as f:
+    validated_path = _validate_file_path(str(path))
+    with open(validated_path, "w") as f:
         json.dump(history, f, indent=2)
 
 

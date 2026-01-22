@@ -486,3 +486,306 @@ class TestShortTermMemoryCrossSessionIntegration:
 
         assert isinstance(coordinator, CrossSessionCoordinator)
         assert coordinator.credentials.tier == AccessTier.CONTRIBUTOR
+
+
+# =============================================================================
+# Additional Tests for Coverage Improvement
+# =============================================================================
+
+
+class TestCrossSessionCoordinatorProperties:
+    """Test CrossSessionCoordinator property accessors."""
+
+    @pytest.fixture
+    def mock_redis_memory(self):
+        """Create a memory instance with mocked Redis client."""
+        memory = RedisShortTermMemory(use_mock=True)
+        memory.use_mock = False
+        memory._client = MagicMock()
+        return memory
+
+    def test_session_info_property(self, mock_redis_memory):
+        """Test accessing session_info property."""
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        info = coordinator.session_info
+        assert isinstance(info, SessionInfo)
+        assert info.agent_id == coordinator.agent_id
+
+    def test_agent_id_property(self, mock_redis_memory):
+        """Test accessing agent_id property."""
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        assert coordinator.agent_id is not None
+        assert isinstance(coordinator.agent_id, str)
+
+    def test_credentials_property(self, mock_redis_memory):
+        """Test accessing credentials property."""
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            access_tier=AccessTier.STEWARD,
+            auto_announce=False,
+        )
+
+        creds = coordinator.credentials
+        assert creds.tier == AccessTier.STEWARD
+
+
+class TestCrossSessionCoordinatorNullClient:
+    """Test CrossSessionCoordinator when client is None."""
+
+    @pytest.fixture
+    def memory_with_null_client(self):
+        """Create a memory instance where client is None."""
+        memory = RedisShortTermMemory(use_mock=True)
+        memory.use_mock = False  # Pretend not mock mode
+        memory._client = None  # But no actual client
+        return memory
+
+    def test_announce_with_null_client_no_op(self, memory_with_null_client):
+        """Announce should be a no-op when client is None."""
+        coordinator = CrossSessionCoordinator(
+            memory=memory_with_null_client,
+            auto_announce=False,
+        )
+
+        # Should not raise, just return early
+        coordinator.announce()
+
+    def test_depart_with_null_client_no_op(self, memory_with_null_client):
+        """Depart should be a no-op when client is None."""
+        coordinator = CrossSessionCoordinator(
+            memory=memory_with_null_client,
+            auto_announce=False,
+        )
+
+        # Should not raise, just return early
+        coordinator.depart()
+
+    def test_get_active_sessions_with_null_client(self, memory_with_null_client):
+        """get_active_sessions should return empty list when client is None."""
+        coordinator = CrossSessionCoordinator(
+            memory=memory_with_null_client,
+            auto_announce=False,
+        )
+
+        sessions = coordinator.get_active_sessions()
+        assert sessions == []
+
+
+class TestCrossSessionCoordinatorGetSession:
+    """Test CrossSessionCoordinator.get_session method."""
+
+    @pytest.fixture
+    def mock_redis_memory(self):
+        """Create a memory instance with mocked Redis client."""
+        memory = RedisShortTermMemory(use_mock=True)
+        memory.use_mock = False
+        memory._client = MagicMock()
+        return memory
+
+    def test_get_session_found(self, mock_redis_memory):
+        """get_session should return SessionInfo for existing session."""
+        now = datetime.now()
+        session_data = SessionInfo(
+            agent_id="target_agent",
+            session_type=SessionType.SERVICE,
+            access_tier=AccessTier.VALIDATOR,
+            capabilities=["manage"],
+            started_at=now,
+            last_heartbeat=now,
+        )
+
+        mock_redis_memory._client.hget.return_value = json.dumps(
+            session_data.to_dict()
+        ).encode()
+
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        result = coordinator.get_session("target_agent")
+        assert result is not None
+        assert result.agent_id == "target_agent"
+        assert result.session_type == SessionType.SERVICE
+
+    def test_get_session_not_found(self, mock_redis_memory):
+        """get_session should return None for nonexistent session."""
+        mock_redis_memory._client.hget.return_value = None
+
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        result = coordinator.get_session("nonexistent_agent")
+        assert result is None
+
+    def test_get_session_stale_returns_none(self, mock_redis_memory):
+        """get_session should return None for stale session."""
+        old_time = datetime.now() - timedelta(seconds=STALE_THRESHOLD_SECONDS + 100)
+        session_data = SessionInfo(
+            agent_id="stale_agent",
+            session_type=SessionType.WORKER,
+            access_tier=AccessTier.CONTRIBUTOR,
+            capabilities=[],
+            started_at=old_time,
+            last_heartbeat=old_time,
+        )
+
+        mock_redis_memory._client.hget.return_value = json.dumps(
+            session_data.to_dict()
+        ).encode()
+
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        result = coordinator.get_session("stale_agent")
+        assert result is None
+
+
+class TestCrossSessionCoordinatorInvalidData:
+    """Test handling of invalid session data."""
+
+    @pytest.fixture
+    def mock_redis_memory(self):
+        """Create a memory instance with mocked Redis client."""
+        memory = RedisShortTermMemory(use_mock=True)
+        memory.use_mock = False
+        memory._client = MagicMock()
+        return memory
+
+    def test_get_active_sessions_handles_invalid_json(self, mock_redis_memory):
+        """Should handle invalid JSON gracefully."""
+        now = datetime.now()
+        mock_redis_memory._client.hgetall.return_value = {
+            b"good_agent": json.dumps({
+                "agent_id": "good_agent",
+                "session_type": "claude",
+                "access_tier": 2,  # CONTRIBUTOR = 2
+                "capabilities": [],
+                "started_at": now.isoformat(),
+                "last_heartbeat": now.isoformat(),
+                "metadata": {},
+            }).encode(),
+            b"bad_agent": b"not valid json {{{",
+        }
+
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        sessions = coordinator.get_active_sessions()
+        # Should only return the good session
+        assert len(sessions) == 1
+        assert sessions[0].agent_id == "good_agent"
+
+    def test_get_active_sessions_handles_missing_fields(self, mock_redis_memory):
+        """Should handle sessions with missing fields gracefully."""
+        mock_redis_memory._client.hgetall.return_value = {
+            b"incomplete_agent": json.dumps({
+                "agent_id": "incomplete_agent",
+                # Missing required fields
+            }).encode(),
+        }
+
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        sessions = coordinator.get_active_sessions()
+        # Should skip invalid sessions
+        assert len(sessions) == 0
+
+
+class TestCrossSessionCoordinatorHeartbeat:
+    """Test heartbeat functionality."""
+
+    @pytest.fixture
+    def mock_redis_memory(self):
+        """Create a memory instance with mocked Redis client."""
+        memory = RedisShortTermMemory(use_mock=True)
+        memory.use_mock = False
+        memory._client = MagicMock()
+        return memory
+
+    def test_send_heartbeat_private(self, mock_redis_memory):
+        """Test sending a single heartbeat via private method."""
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        # Call the private method
+        coordinator._send_heartbeat()
+
+        # Should have updated the session in Redis
+        mock_redis_memory._client.hset.assert_called()
+
+    def test_start_and_stop_heartbeat(self, mock_redis_memory):
+        """Test starting and stopping heartbeat thread."""
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        # Start heartbeat
+        coordinator.start_heartbeat()
+        assert coordinator._heartbeat_thread is not None
+
+        # Stop heartbeat
+        coordinator.stop_heartbeat()
+        # Thread should be stopped
+
+    def test_stop_heartbeat_when_not_running(self, mock_redis_memory):
+        """Stop heartbeat should be safe when not running."""
+        coordinator = CrossSessionCoordinator(
+            memory=mock_redis_memory,
+            auto_announce=False,
+        )
+
+        # Should not raise
+        coordinator.stop_heartbeat()
+
+
+class TestBackgroundServiceAdditional:
+    """Additional tests for BackgroundService."""
+
+    @pytest.fixture
+    def mock_redis_memory(self):
+        """Create a memory instance with mocked Redis client."""
+        memory = RedisShortTermMemory(use_mock=True)
+        memory.use_mock = False
+        memory._client = MagicMock()
+        # Default to not holding lock
+        memory._client.set.return_value = True
+        memory._client.get.return_value = None
+        return memory
+
+    def test_service_is_running_property(self, mock_redis_memory):
+        """Test is_running property."""
+        service = BackgroundService(
+            memory=mock_redis_memory,
+        )
+
+        assert service.is_running is False
+
+    def test_service_stop_when_not_started(self, mock_redis_memory):
+        """Stop should be safe when not started."""
+        service = BackgroundService(
+            memory=mock_redis_memory,
+        )
+
+        # Should not raise
+        service.stop()

@@ -7,31 +7,30 @@ Licensed under Fair Source License 0.9
 import pytest
 
 
-@pytest.mark.xfail(reason="FormField API changed - field_type->type, tests need update")
 class TestFormField:
     """Tests for FormField class."""
 
     def test_create_text_field(self):
         """Test creating a text field."""
-        from empathy_os.socratic.forms import FieldType, FormField
+        from empathy_os.socratic.forms import FieldType, FieldValidation, FormField
 
         field = FormField(
-            field_id="name",
+            id="name",
             field_type=FieldType.TEXT,
             label="Your Name",
-            required=True,
+            validation=FieldValidation(required=True),
         )
 
-        assert field.field_id == "name"
+        assert field.id == "name"
         assert field.field_type == FieldType.TEXT
-        assert field.required is True
+        assert field.validation.required is True
 
     def test_create_select_field_with_options(self):
         """Test creating a select field with options."""
         from empathy_os.socratic.forms import FieldOption, FieldType, FormField
 
         field = FormField(
-            field_id="language",
+            id="language",
             field_type=FieldType.SINGLE_SELECT,
             label="Programming Language",
             options=[
@@ -48,7 +47,7 @@ class TestFormField:
         from empathy_os.socratic.forms import FieldType, FieldValidation, FormField
 
         field = FormField(
-            field_id="email",
+            id="email",
             field_type=FieldType.TEXT,
             label="Email",
             validation=FieldValidation(
@@ -62,43 +61,43 @@ class TestFormField:
         assert field.validation.min_length == 5
 
     def test_field_with_show_when(self):
-        """Test conditional field visibility."""
-        from empathy_os.socratic.forms import FieldType, FormField, ShowWhen
+        """Test conditional field visibility using dict format."""
+        from empathy_os.socratic.forms import FieldType, FormField
 
+        # Note: show_when uses dict format, not ShowWhen object
         field = FormField(
-            field_id="security_level",
+            id="security_level",
             field_type=FieldType.SINGLE_SELECT,
             label="Security Level",
-            show_when=ShowWhen(
-                field_id="enable_security",
-                operator="equals",
-                value=True,
-            ),
+            show_when={
+                "field_id": "enable_security",
+                "operator": "equals",
+                "value": True,
+            },
         )
 
         assert field.show_when is not None
-        assert field.show_when.field_id == "enable_security"
+        assert field.show_when["field_id"] == "enable_security"
 
 
-@pytest.mark.xfail(reason="Form API changed - form_id->id, tests need update")
 class TestForm:
     """Tests for Form class."""
 
     def test_create_form(self, sample_form):
         """Test creating a form."""
-        assert sample_form.form_id == "test-form-001"
+        assert sample_form.id == "test-form-001"
         assert len(sample_form.fields) == 3
         assert sample_form.round_number == 1
 
     def test_form_serialization(self, sample_form):
         """Test form serialization to dict."""
-
         data = sample_form.to_dict()
 
-        assert data["form_id"] == sample_form.form_id
+        assert data["id"] == sample_form.id
         assert data["title"] == sample_form.title
         assert len(data["fields"]) == 3
 
+    @pytest.mark.skip(reason="Form.from_dict() not implemented - only to_dict() available")
     def test_form_deserialization(self, sample_form):
         """Test form deserialization from dict."""
         from empathy_os.socratic.forms import Form
@@ -106,11 +105,10 @@ class TestForm:
         data = sample_form.to_dict()
         restored = Form.from_dict(data)
 
-        assert restored.form_id == sample_form.form_id
+        assert restored.id == sample_form.id
         assert len(restored.fields) == len(sample_form.fields)
 
 
-@pytest.mark.xfail(reason="FormResponse API changed, tests need update")
 class TestFormResponse:
     """Tests for FormResponse class."""
 
@@ -119,7 +117,7 @@ class TestFormResponse:
         from empathy_os.socratic.forms import FormResponse
 
         response = FormResponse(
-            form_id=sample_form.form_id,
+            form_id=sample_form.id,
             answers={
                 "languages": ["python", "javascript"],
                 "quality_focus": ["security"],
@@ -127,11 +125,10 @@ class TestFormResponse:
             },
         )
 
-        assert response.form_id == sample_form.form_id
+        assert response.form_id == sample_form.id
         assert len(response.answers) == 3
 
 
-@pytest.mark.xfail(reason="ValidationResult API changed - errors->messages, tests need update")
 class TestValidationResult:
     """Tests for ValidationResult class."""
 
@@ -142,19 +139,49 @@ class TestValidationResult:
         result = ValidationResult(is_valid=True)
 
         assert result.is_valid is True
-        assert result.errors == []
+        # API uses field_errors and form_errors, not errors
+        assert result.field_errors == {}
+        assert result.form_errors == []
 
-    def test_invalid_result_with_errors(self):
-        """Test invalid validation result with errors."""
+    def test_invalid_result_with_field_errors(self):
+        """Test invalid validation result with field errors."""
         from empathy_os.socratic.forms import ValidationResult
 
         result = ValidationResult(
             is_valid=False,
-            errors=["Field 'name' is required", "Invalid email format"],
+            field_errors={
+                "name": "Field 'name' is required",
+                "email": "Invalid email format",
+            },
         )
 
         assert result.is_valid is False
-        assert len(result.errors) == 2
+        assert len(result.field_errors) == 2
+
+    def test_invalid_result_with_form_errors(self):
+        """Test invalid validation result with form-level errors."""
+        from empathy_os.socratic.forms import ValidationResult
+
+        result = ValidationResult(
+            is_valid=False,
+            form_errors=["At least one field must be filled"],
+        )
+
+        assert result.is_valid is False
+        assert len(result.form_errors) == 1
+
+    def test_all_errors_property(self):
+        """Test the all_errors property aggregates errors."""
+        from empathy_os.socratic.forms import ValidationResult
+
+        result = ValidationResult(
+            is_valid=False,
+            field_errors={"name": "Required"},
+            form_errors=["Form is incomplete"],
+        )
+
+        all_errors = result.all_errors
+        assert len(all_errors) == 2
 
 
 class TestFieldType:

@@ -1,19 +1,61 @@
 # Empathy Framework
 
-**The AI collaboration framework with breakthrough meta-orchestration - agents that compose themselves.**
+**The Claude-optimized AI collaboration framework with breakthrough meta-orchestration - agents that compose themselves.**
 
-🎭 **v4.6: $0 Cost AI Workflows** - Run agent teams free with any Claude Code subscription, Socratic agent creation, memory-enhanced learning.
+🎯 **v4.6.4: Optimized for Claude Code** - Built and tested extensively with Claude Code for the best experience. 10+ slash commands, automatic pattern learning, prompt caching (90% savings), true async I/O. **Full multi-LLM support** - works seamlessly with OpenAI, Gemini, and local models.
 
 [![PyPI](https://img.shields.io/pypi/v/empathy-framework)](https://pypi.org/project/empathy-framework/)
-[![Tests](https://img.shields.io/badge/tests-7%2C200%2B%20passing-brightgreen)](https://github.com/Smart-AI-Memory/empathy-framework/actions)
+[![Tests](https://img.shields.io/badge/tests-4%2C000%2B%20passing-brightgreen)](https://github.com/Smart-AI-Memory/empathy-framework/actions)
 [![Coverage](https://img.shields.io/badge/coverage-68%25-yellow)](https://github.com/Smart-AI-Memory/empathy-framework)
-[![License](https://img.shields.io/badge/license-Fair%20Source%200.9-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-Fair%20Source%200.9-blue)](https://github.com/Smart-AI-Memory/empathy-framework/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue)](https://www.python.org)
 [![Security](https://img.shields.io/badge/security-hardened-green)](https://github.com/Smart-AI-Memory/empathy-framework/blob/main/SECURITY.md)
 
 ```bash
 pip install empathy-framework[developer]  # Lightweight for individual developers
 ```
+
+## What's New in v4.6.4 🎯 **OPTIMIZED FOR CLAUDE CODE**
+
+### **Built for Claude Code, Works Everywhere**
+
+**v4.6.4** is optimized and extensively tested with Claude Code for the best development experience, while maintaining full compatibility with OpenAI, Gemini, and local models.
+
+**Cost-Saving Features:**
+
+- 📉 **Prompt Caching** - 90% reduction on repeated operations (enabled by default)
+- ⚡ **True Async I/O** - `AsyncAnthropic` for parallel efficiency
+- 🎯 **Slash Commands** - 10+ structured workflows that reduce token waste
+- 🧠 **Auto Pattern Learning** - Stop re-explaining the same codebase
+
+**New Slash Commands:**
+
+| Command | What It Does |
+|---------|--------------|
+| `/debug` | Bug investigation with pattern matching |
+| `/refactor` | Safe refactoring with test verification |
+| `/review` | Code review against project standards |
+| `/review-pr` | PR review with APPROVE/REJECT verdict |
+| `/deps` | Dependency audit (CVE, licenses, outdated) |
+| `/profile` | Performance profiling and bottlenecks |
+| `/benchmark` | Performance regression tracking |
+| `/explain` | Code architecture explanation |
+| `/commit` | Well-formatted git commits |
+| `/pr` | Structured PR creation |
+
+**Multi-LLM Support:**
+
+```python
+# All providers supported with async clients
+from empathy_llm_toolkit.providers import (
+    AnthropicProvider,  # Claude (primary, optimized)
+    OpenAIProvider,     # GPT-4, GPT-3.5
+    GeminiProvider,     # Gemini 1.5, 2.0
+    LocalProvider,      # Ollama, LM Studio
+)
+```
+
+---
 
 ## What's New in v4.6.0 💰 **$0 COST AI WORKFLOWS**
 
@@ -273,9 +315,9 @@ agents = [get_template(a["role"]) for a in best.agents]
 
 **Documentation:**
 
-- [Meta-Orchestration User Guide](docs/ORCHESTRATION_USER_GUIDE.md) - Complete guide with examples
-- [API Reference](docs/ORCHESTRATION_API.md) - All classes and methods
-- [Examples](examples/orchestration/) - Working code samples
+- [Meta-Orchestration User Guide](https://github.com/Smart-AI-Memory/empathy-framework/blob/main/docs/ORCHESTRATION_USER_GUIDE.md) - Complete guide with examples
+- [API Reference](https://github.com/Smart-AI-Memory/empathy-framework/blob/main/docs/ORCHESTRATION_API.md) - All classes and methods
+- [Examples](https://github.com/Smart-AI-Memory/empathy-framework/tree/main/examples/orchestration/) - Working code samples
 
 **Features:**
 
@@ -1161,15 +1203,15 @@ For those interested in the development history and architectural decisions:
 
 - **[Development Logs](https://github.com/Smart-AI-Memory/empathy-framework/tree/main/docs/development-logs/)** — Execution plans, phase completions, and progress tracking
 - **[Architecture Docs](https://github.com/Smart-AI-Memory/empathy-framework/tree/main/docs/architecture/)** — System design, memory architecture, and integration plans
-- **[Claude Code Skills](.claude/commands/)** — AI-powered workflows and custom agent creation
+- **[Claude Code Skills](https://github.com/Smart-AI-Memory/empathy-framework/tree/main/.claude/commands/)** — AI-powered workflows and custom agent creation
 - **[Guides](https://github.com/Smart-AI-Memory/empathy-framework/tree/main/docs/guides/)** — Publishing tutorials, MkDocs setup, and distribution policies
 
 ---
 
 ## License
 
-**Fair Source License 0.9** — Free for students, educators, and teams ≤5 employees. Commercial license ($99/dev/year) for larger organizations. [Details →](LICENSE)
+**Fair Source License 0.9** — Free for students, educators, and teams ≤5 employees. Commercial license ($99/dev/year) for larger organizations. [Details →](https://github.com/Smart-AI-Memory/empathy-framework/blob/main/LICENSE)
 
 ---
 
-**Built by [Smart AI Memory](https://smartaimemory.com)** · [Documentation](https://smartaimemory.com/framework-docs/) · [Examples](examples/) · [Issues](https://github.com/Smart-AI-Memory/empathy-framework/issues)
+**Built by [Smart AI Memory](https://smartaimemory.com)** · [Documentation](https://smartaimemory.com/framework-docs/) · [Examples](https://github.com/Smart-AI-Memory/empathy-framework/tree/main/examples) · [Issues](https://github.com/Smart-AI-Memory/empathy-framework/issues)

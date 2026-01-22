@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "updated_at": "2026-01-10T04:45:23.804450",
-  "node_count": 24,
+  "updated_at": "2026-01-21T21:33:09.498043",
+  "node_count": 27,
   "edge_count": 0,
   "nodes": [
     {
@@ -386,6 +386,54 @@
       "tags": [],
       "created_at": "2026-01-10T04:45:23.803937",
       "updated_at": "2026-01-10T04:45:23.803938",
+      "status": "open"
+    },
+    {
+      "id": "code_review_20260121210401_b83ec54f38d1",
+      "type": "pattern",
+      "name": "review:Review of 0 files",
+      "description": "Code review passed with no issues identified.",
+      "source_wizard": "code_review_crew",
+      "source_file": "",
+      "source_line": null,
+      "severity": "",
+      "confidence": 1.0,
+      "metadata": {},
+      "tags": [],
+      "created_at": "2026-01-21T21:04:01.549503",
+      "updated_at": "2026-01-21T21:04:01.549504",
+      "status": "open"
+    },
+    {
+      "id": "code_review_20260121210716_b83ec54f38d1",
+      "type": "pattern",
+      "name": "review:Review of 0 files",
+      "description": "Code review passed with no issues identified.",
+      "source_wizard": "code_review_crew",
+      "source_file": "",
+      "source_line": null,
+      "severity": "",
+      "confidence": 1.0,
+      "metadata": {},
+      "tags": [],
+      "created_at": "2026-01-21T21:07:16.256485",
+      "updated_at": "2026-01-21T21:07:16.256486",
+      "status": "open"
+    },
+    {
+      "id": "code_review_20260121213309_b83ec54f38d1",
+      "type": "pattern",
+      "name": "review:Review of 0 files",
+      "description": "Code review passed with no issues identified.",
+      "source_wizard": "code_review_crew",
+      "source_file": "",
+      "source_line": null,
+      "severity": "",
+      "confidence": 1.0,
+      "metadata": {},
+      "tags": [],
+      "created_at": "2026-01-21T21:33:09.496535",
+      "updated_at": "2026-01-21T21:33:09.496535",
       "status": "open"
     }
   ],

@@ -162,6 +162,9 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 case 'runAgentTeam':
                     await this._runAgentTeam(message.skill, message.template, message.label);
                     break;
+                case 'runSkill':
+                    await this._runSkill(message.skill, message.label);
+                    break;
                 case 'createDynamic':
                     await this._createDynamic(message.createType);
                     break;
@@ -814,143 +817,95 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
     }
 
     private async _runOrchestratedHealthCheck() {
-        // v4.6.0: Prefer Claude Code skill ($0 cost) with API fallback
-        await this._startClaudeCodeWithSkill(
-            '/security-scan',
-            'Health Check',
-            'empathy workflow run orchestrated-health-check'
-        );
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
+        await this._openClaudeCodeWithCommand('/security-scan');
     }
 
     private async _runOrchestratedReleasePrep() {
-        // v4.6.0: Prefer Claude Code skill ($0 cost) with API fallback
-        await this._startClaudeCodeWithSkill(
-            '/release-prep',
-            'Release Prep',
-            'empathy meta-workflow run release-prep --real --use-defaults'
-        );
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
+        await this._openClaudeCodeWithCommand('/release-prep');
     }
 
     private async _runOrchestratedTestCoverage() {
-        // v4.6.0: Prefer Claude Code skill ($0 cost) with API fallback
-        await this._startClaudeCodeWithSkill(
-            '/test-coverage',
-            'Test Coverage',
-            'empathy meta-workflow run test-coverage-boost --real --use-defaults'
-        );
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
+        await this._openClaudeCodeWithCommand('/test-coverage');
     }
 
-    private _getClaudeCodeExtension(): vscode.Extension<unknown> | undefined {
-        // Check for Claude Code VSCode extension (preferred for form-based UX)
-        // Try multiple possible extension IDs
-        const extensionIds = [
-            'anthropic.claude-code',
-            'anthropics.claude-code',
-            'claude.code'
-        ];
-        for (const id of extensionIds) {
-            const ext = vscode.extensions.getExtension(id);
-            if (ext) {
-                return ext;
-            }
-        }
-        return undefined;
-    }
+    private async _openClaudeCodeWithCommand(command: string) {
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
+        // This approach works for ALL skills including interactive ones that use AskUserQuestion
+        try {
+            // Open Claude Code sidebar
+            await vscode.commands.executeCommand('claude-vscode.sidebar.open');
 
-    private async _startClaudeCodeWithSkill(skill: string, fallbackLabel: string, fallbackCommand: string) {
-        // v4.4: Start Claude Code webview with skill command
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (!workspaceFolder) {
-            vscode.window.showErrorMessage('No workspace folder open');
-            return;
-        }
+            // Small delay to ensure the panel is ready
+            await new Promise(resolve => setTimeout(resolve, 200));
 
-        const claudeExt = this._getClaudeCodeExtension();
+            // Focus the input
+            await vscode.commands.executeCommand('claude-vscode.focus');
 
-        if (claudeExt) {
-            // Claude Code extension found - use webview panel
-            vscode.window.showInformationMessage(`Starting Claude Code with ${skill}...`);
+            // Small delay to ensure focus is set
+            await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Open Claude Code and auto-send the skill command
-            try {
-                // Start a new conversation in Claude Code
-                await vscode.commands.executeCommand('claude-vscode.newConversation');
+            // Try to type the command using VS Code's type command
+            // This inserts text at the current cursor position
+            await vscode.commands.executeCommand('type', { text: command });
 
-                // Wait for panel to initialize
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Focus the Claude Code input
-                await vscode.commands.executeCommand('claude-vscode.focus');
-
-                // Wait a moment for focus
-                await new Promise(resolve => setTimeout(resolve, 200));
-
-                // Copy skill to clipboard and paste it
-                await vscode.env.clipboard.writeText(skill);
-
-                // Use VSCode's paste command to paste into focused input
-                await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
-
-                // Wait a moment then simulate Enter to send
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                // Try to send the message by simulating Enter key
-                await vscode.commands.executeCommand('type', { text: '\n' });
-
-                vscode.window.showInformationMessage(
-                    `Running ${skill} in Claude Code...`
-                );
-            } catch (error) {
-                // Fallback: copy to clipboard and let user paste
-                await vscode.env.clipboard.writeText(skill);
-                try {
-                    await vscode.commands.executeCommand('claude-vscode.sidebar.open');
-                } catch {
-                    // Sidebar command failed, ignore
-                }
-                vscode.window.showInformationMessage(
-                    `Skill "${skill}" copied to clipboard. Paste in Claude Code to run.`
-                );
-            }
-        } else {
-            // No Claude Code extension - fall back to API mode (enterprise feature)
+            // Show helpful notification
+            vscode.window.showInformationMessage(`Command "${command}" ready - press Enter to execute`);
+        } catch (error) {
+            // Fallback: copy to clipboard if typing doesn't work
+            await vscode.env.clipboard.writeText(command);
             vscode.window.showInformationMessage(
-                `Running ${fallbackLabel} via API (install Claude Code for $0 execution)...`
-            );
-            const terminal = vscode.window.createTerminal({
-                name: `Empathy: ${fallbackLabel}`,
-                cwd: workspaceFolder
+                `Command copied to clipboard. Paste in Claude Code chat and press Enter.`,
+                'Open Claude Code'
+            ).then(selection => {
+                if (selection === 'Open Claude Code') {
+                    vscode.commands.executeCommand('claude-vscode.sidebar.open');
+                }
             });
-            terminal.show();
-            terminal.sendText(fallbackCommand);
         }
     }
 
-    private async _runAgentTeam(skill: string, template: string, label: string) {
-        // v4.4: Run agent team via Claude Code webview
-        await this._startClaudeCodeWithSkill(
-            skill,
-            label,
-            `empathy meta-workflow run ${template} --real --use-defaults`
-        );
+    private async _runAgentTeam(skill: string, _template: string, _label: string) {
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
+        await this._openClaudeCodeWithCommand(skill);
+    }
+
+    private async _runSkill(skill: string, _label: string) {
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
+        // This works for ALL skills including interactive ones that use AskUserQuestion
+        await this._openClaudeCodeWithCommand(skill);
     }
 
     private async _createDynamic(createType: string) {
-        // v4.4: Dynamic agent/team creation via Claude Code webview
+        // v4.6.7: Open Claude Code with command prefilled - user presses Enter to execute
         const skill = createType === 'agent' ? '/create-agent' : '/create-team';
-        const label = createType === 'agent' ? 'Create Agent' : 'Create Team';
-
-        await this._startClaudeCodeWithSkill(
-            skill,
-            label,
-            `empathy meta-workflow ${createType === 'agent' ? 'create-agent' : 'create-team'} --interactive`
-        );
+        await this._openClaudeCodeWithCommand(skill);
     }
 
     private async _runWorkflow(workflowName: string, input?: string) {
         // Special handling for doc-orchestrator: open the Documentation Analysis panel
         if (workflowName === 'doc-orchestrator') {
             vscode.commands.executeCommand('empathy.openDocAnalysis');
+            return;
+        }
+
+        // v4.6.7: All workflow buttons now open Claude Code with command prefilled
+        // User presses Enter to execute - works for ALL skills including interactive ones
+        const workflowToSkill: Record<string, string> = {
+            'dependency-check': '/deps',
+            'code-review': '/review',
+            'bug-predict': '/debug',
+            'perf-audit': '/profile',
+            'refactor-plan': '/refactor',
+            'security-audit': '/security-scan',
+            'pr-review': '/review-pr',
+        };
+
+        const skill = workflowToSkill[workflowName];
+        if (skill) {
+            await this._openClaudeCodeWithCommand(skill);
             return;
         }
 
@@ -992,8 +947,8 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
         };
         const inputKey = inputKeys[workflowName] || 'query';
 
-        // Build arguments as array for safe execution (no shell interpolation)
-        const args = ['-m', 'empathy_os.cli', 'workflow', 'run', workflowName];
+        // v4.6.3: Build arguments for 'empathy' CLI (not python -m)
+        const args = ['workflow', 'run', workflowName];
         if (input) {
             const inputJson = JSON.stringify({ [inputKey]: input });
             args.push('--input', inputJson);
@@ -1019,12 +974,11 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
         const opensInEditor = filePickerWorkflows.includes(workflowName);
         console.log(`[EmpathyDashboard] Workflow: ${workflowName}, opensInEditor: ${opensInEditor}`);
 
-        // Get configured python path
-        const config = vscode.workspace.getConfiguration('empathy');
-        const pythonPath = config.get<string>('pythonPath', 'python');
+        // v4.6.3: Use 'empathy' CLI command directly (installed via pip)
+        const empathyCmd = 'empathy';
 
         // Use execFile with array arguments to prevent command injection
-        cp.execFile(pythonPath, args, { cwd: workspaceFolder, maxBuffer: 1024 * 1024 * 5 }, async (error, stdout, stderr) => {
+        cp.execFile(empathyCmd, args, { cwd: workspaceFolder, maxBuffer: 1024 * 1024 * 5 }, async (error, stdout, stderr) => {
             const output = stdout || stderr || (error ? error.message : 'No output');
             const success = !error;
 
@@ -1212,16 +1166,14 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
             'pro-review': 'diff'
         };
         const inputKey = inputKeys[workflowName] || 'target';
-        const args = ['-m', 'empathy_os.cli', 'workflow', 'run', workflowName];
+        // v4.6.3: Use 'empathy' CLI command directly
+        const args = ['workflow', 'run', workflowName];
         const inputJson = JSON.stringify({ [inputKey]: selectedPath });
         args.push('--input', inputJson);
 
-        const config = vscode.workspace.getConfiguration('empathy');
-        const pythonPath = config.get<string>('pythonPath', 'python');
-
         // Function to run the workflow
         const runWorkflow = () => {
-            cp.execFile(pythonPath, args, { cwd: workspaceFolder, maxBuffer: 1024 * 1024 * 5 }, async (error, stdout, stderr) => {
+            cp.execFile('empathy', args, { cwd: workspaceFolder, maxBuffer: 1024 * 1024 * 5 }, async (error, stdout, stderr) => {
                 const output = stdout || stderr || (error ? error.message : 'No output');
                 lastOutput = output;
                 const timestamp = new Date().toLocaleString();
@@ -2042,7 +1994,14 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
 
         .action-icon {
             font-size: 18px;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+        }
+
+        .slash-cmd {
+            font-size: 11px;
+            color: var(--vscode-editor-foreground, #000);
+            font-family: var(--vscode-editor-font-family, monospace);
+            margin-top: 2px;
         }
 
         /* Health Tree View */
@@ -2160,163 +2119,140 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                 <span style="font-size: 12px; font-weight: 600;">Health:</span>
                 <span id="health-score-summary" style="font-size: 14px; font-weight: 700; margin-left: 8px;">--</span>
             </div>
-            <span style="font-size: 11px; opacity: 0.7;">View Details →</span>
         </div>
     </div>
-        <div class="card">
-            <div class="card-title">Quick Actions</div>
-            <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" data-cmd="morning" title="Daily project briefing with health, costs, and recent activity summary">
-                    <span class="action-icon">&#x2600;</span>
-                    <span>Get Briefing</span>
-                </button>
-                <button class="action-btn workflow-btn" data-cmd="ship" title="Pre-release checklist: tests, linting, security, and quality checks">
-                    <span class="action-icon">&#x1F680;</span>
-                    <span>Run Ship</span>
-                </button>
-                <button class="action-btn workflow-btn" data-cmd="fix-all" title="Auto-fix linting and formatting issues with ruff and black">
-                    <span class="action-icon">&#x1F527;</span>
-                    <span>Fix Issues</span>
-                </button>
-                <button class="action-btn workflow-btn" data-cmd="learn" title="Extract and save learned patterns from recent workflow executions">
-                    <span class="action-icon">&#x1F4DA;</span>
-                    <span>Learn Patterns</span>
-                </button>
-                <button class="action-btn workflow-btn" data-cmd="run-tests" title="Run pytest test suite with coverage reporting">
-                    <span class="action-icon">&#x1F9EA;</span>
-                    <span>Run Tests</span>
-                </button>
-                <button class="action-btn" data-cmd="initialize" title="Interactive setup wizard for new projects">
-                    <span class="action-icon">&#x2699;</span>
-                    <span>Setup</span>
-                </button>
-            </div>
-        </div>
 
         <div class="card" style="margin-top: 12px">
             <div class="card-title">Workflows</div>
 
-            <!-- Code Review & Analysis -->
-            <div style="margin-top: 8px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">CODE REVIEW & ANALYSIS</div>
+            <!-- Code Review -->
+            <div style="margin-top: 8px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">📝 CODE REVIEW</div>
             <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" data-workflow="code-review" title="Tiered code analysis with conditional premium review for complex issues">
+                <button class="action-btn workflow-btn" data-workflow="code-review" title="Review any code via /review skill - enforces coding standards and best practices">
                     <span class="action-icon">&#x1F50D;</span>
-                    <span>Code Review</span>
+                    <span>Review Code</span>
+                    <span class="slash-cmd">/review</span>
                 </button>
-                <button class="action-btn workflow-btn" data-workflow="pro-review" title="Advanced code analysis for diffs and pull requests with tiered LLM usage">
-                    <span class="action-icon">&#x2B50;</span>
-                    <span>Pro Review</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="pr-review" title="Comprehensive pull request review with diff analysis and recommendations">
+                <button class="action-btn workflow-btn" data-workflow="pr-review" title="Review pull requests via /review-pr skill - code quality + security with verdict">
                     <span class="action-icon">&#x1F4C4;</span>
-                    <span>PR Review</span>
+                    <span>Review PR</span>
+                    <span class="slash-cmd">/review-pr</span>
                 </button>
             </div>
 
-            <!-- Documentation -->
-            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">DOCUMENTATION</div>
-            <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" data-workflow="doc-orchestrator" title="End-to-end documentation management: scout gaps, prioritize, and generate">
-                    <span class="action-icon">&#x1F4DA;</span>
-                    <span>Manage Docs</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="doc-gen" title="Cost-optimized documentation generation: outline → write → polish">
-                    <span class="action-icon">&#x1F4DD;</span>
-                    <span>Generate Docs</span>
-                </button>
-            </div>
-
-            <!-- Quality & Testing -->
-            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">QUALITY & TESTING</div>
-            <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" id="btn-test-gen-direct" data-workflow="test-gen" title="Generate comprehensive test suites with smart coverage analysis">
-                    <span class="action-icon">&#x1F9EA;</span>
-                    <span>Generate Tests</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="bug-predict" title="AI-powered bug prediction using pattern analysis and code smells">
+            <!-- Development -->
+            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">🛠️ DEVELOPMENT</div>
+            <div class="actions-grid workflow-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <button class="action-btn workflow-btn" data-workflow="bug-predict" title="Debug issues via /debug skill - analyze errors and find root causes">
                     <span class="action-icon">&#x1F41B;</span>
-                    <span>Predict Bugs</span>
+                    <span>Debug</span>
+                    <span class="slash-cmd">/debug</span>
+                </button>
+                <button class="action-btn workflow-btn" data-workflow="refactor-plan" title="Refactoring assistant via /refactor skill - safe code improvements">
+                    <span class="action-icon">&#x1F3D7;</span>
+                    <span>Refactor</span>
+                    <span class="slash-cmd">/refactor</span>
+                </button>
+                <button class="action-btn skill-btn" data-skill="/explain" title="Explain code via /explain skill - understand architecture and patterns">
+                    <span class="action-icon">&#x1F4A1;</span>
+                    <span>Explain</span>
+                    <span class="slash-cmd">/explain</span>
+                </button>
+            </div>
+            <div class="actions-grid workflow-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 6px;">
+                <button class="action-btn workflow-btn dynamic-create-btn" data-create-type="agent" title="Create a custom AI agent with Socratic-guided questions">
+                    <span class="action-icon">&#x1F916;</span>
+                    <span>New Agent</span>
+                    <span class="slash-cmd">/create-agent</span>
+                </button>
+                <button class="action-btn workflow-btn dynamic-create-btn" data-create-type="team" title="Create a custom AI agent team with Socratic-guided workflow">
+                    <span class="action-icon">&#x1F465;</span>
+                    <span>New Agent Team</span>
+                    <span class="slash-cmd">/create-team</span>
                 </button>
             </div>
 
             <!-- Security & Performance -->
-            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">SECURITY & PERFORMANCE</div>
-            <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" data-workflow="security-audit" title="Comprehensive security vulnerability scan with OWASP checks">
-                    <span class="action-icon">&#x1F512;</span>
-                    <span>Security Audit</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="perf-audit" title="Performance analysis identifying bottlenecks and optimization opportunities">
-                    <span class="action-icon">&#x26A1;</span>
-                    <span>Perf Audit</span>
-                </button>
-            </div>
-
-            <!-- Maintenance -->
-            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">MAINTENANCE</div>
-            <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" data-workflow="refactor-plan" title="Create detailed refactoring plans with architectural recommendations">
-                    <span class="action-icon">&#x1F3D7;</span>
-                    <span>Refactor Plan</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="dependency-check" title="Analyze dependencies for vulnerabilities, updates, and compatibility">
-                    <span class="action-icon">&#x1F4E6;</span>
-                    <span>Check Deps</span>
-                </button>
-            </div>
-
-            <!-- AI Agent Teams (v4.4) - Multi-Agent Workflows -->
-            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                <span>AI AGENT TEAMS</span>
-                <span style="background: linear-gradient(90deg, #10b981, #3b82f6); color: white; font-size: 8px; padding: 2px 6px; border-radius: 8px; font-weight: 700;">v4.4</span>
-            </div>
+            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">🔒 SECURITY & PERFORMANCE</div>
             <div class="actions-grid workflow-grid" style="grid-template-columns: repeat(2, 1fr);">
-                <button class="action-btn workflow-btn agent-team-btn" data-skill="/release-prep" data-template="release-prep" title="Deploy 4 AI agents: Security Auditor, Test Coverage Analyst, Code Quality Reviewer, Documentation Specialist">
-                    <span class="action-icon">&#x1F680;</span>
-                    <span>Release Prep</span>
+                <button class="action-btn workflow-btn" data-workflow="security-audit" title="Security scan via /security-scan skill - OWASP checks and vulnerability detection">
+                    <span class="action-icon">&#x1F512;</span>
+                    <span>Security</span>
+                    <span class="slash-cmd">/security-scan</span>
                 </button>
-                <button class="action-btn workflow-btn agent-team-btn" data-skill="/test-coverage" data-template="test-coverage-boost" title="Deploy 3 AI agents: Gap Analyzer, Test Generator, Test Validator - Boost your test coverage">
+                <button class="action-btn workflow-btn" data-workflow="perf-audit" title="Performance profiling via /profile skill - identify bottlenecks and hot paths">
+                    <span class="action-icon">&#x26A1;</span>
+                    <span>Profile</span>
+                    <span class="slash-cmd">/profile</span>
+                </button>
+                <button class="action-btn workflow-btn" data-workflow="dependency-check" title="Dependency audit via /deps skill - CVE scanning, outdated packages, license compliance">
+                    <span class="action-icon">&#x1F4E6;</span>
+                    <span>Deps</span>
+                    <span class="slash-cmd">/deps</span>
+                </button>
+            </div>
+
+            <!-- Testing -->
+            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">🧪 TESTING</div>
+            <div class="actions-grid workflow-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <button class="action-btn workflow-btn" id="btn-test-gen-direct" data-workflow="test-gen" title="Generate comprehensive test suites with smart coverage analysis">
+                    <span class="action-icon">&#x1F9EA;</span>
+                    <span>Gen Tests</span>
+                    <span class="slash-cmd">/test</span>
+                </button>
+                <button class="action-btn workflow-btn agent-team-btn" data-skill="/test-coverage" data-template="test-coverage-boost" title="Boost test coverage via /test-coverage skill">
                     <span class="action-icon">&#x1F3AF;</span>
-                    <span>Test Coverage</span>
+                    <span>Coverage</span>
+                    <span class="slash-cmd">/test-coverage</span>
                 </button>
-                <button class="action-btn workflow-btn agent-team-btn" data-skill="/test-maintenance" data-template="test-maintenance" title="Deploy 4 AI agents: Test Analyst, Test Generator, Test Validator, Reporter - Maintain test health">
+                <button class="action-btn workflow-btn agent-team-btn" data-skill="/test-maintenance" data-template="test-maintenance" title="Maintain test health - analyze, fix, and validate tests">
                     <span class="action-icon">&#x1F527;</span>
-                    <span>Test Maintenance</span>
+                    <span>Maintenance</span>
+                    <span class="slash-cmd">/test-maintenance</span>
                 </button>
-                <button class="action-btn workflow-btn agent-team-btn" data-skill="/manage-docs" data-template="manage-docs" title="Deploy 3 AI agents: Documentation Analyst, Reviewer, Synthesizer - Keep docs in sync with code">
+                <button class="action-btn skill-btn" data-skill="/benchmark" title="Performance benchmarking via /benchmark skill - track regressions over time">
+                    <span class="action-icon">&#x1F4CA;</span>
+                    <span>Benchmark</span>
+                    <span class="slash-cmd">/benchmark</span>
+                </button>
+            </div>
+
+            <!-- Documentation -->
+            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">📚 DOCUMENTATION</div>
+            <div class="actions-grid workflow-grid">
+                <button class="action-btn workflow-btn" data-workflow="doc-orchestrator" title="End-to-end documentation management: scout gaps, prioritize, and generate">
                     <span class="action-icon">&#x1F4DA;</span>
                     <span>Manage Docs</span>
+                    <span class="slash-cmd">/manage-docs</span>
+                </button>
+                <button class="action-btn workflow-btn" data-workflow="doc-gen" title="Cost-optimized documentation generation: outline → write → polish">
+                    <span class="action-icon">&#x1F4DD;</span>
+                    <span>Generate Docs</span>
+                    <span class="slash-cmd">/feature-overview</span>
                 </button>
             </div>
 
-            <!-- Dynamic Agent/Team Creation (v4.4) -->
-            <div style="margin-top: 8px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                <span>CREATE CUSTOM</span>
-                <span style="background: linear-gradient(90deg, #8b5cf6, #d946ef); color: white; font-size: 8px; padding: 2px 6px; border-radius: 8px; font-weight: 700;">DYNAMIC</span>
-            </div>
+            <!-- Git & Release -->
+            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">🚀 GIT & RELEASE</div>
             <div class="actions-grid workflow-grid" style="grid-template-columns: repeat(2, 1fr);">
-                <button class="action-btn workflow-btn dynamic-create-btn" data-create-type="agent" title="Create a custom AI agent with Socratic-guided questions">
-                    <span class="action-icon">&#x1F916;</span>
-                    <span>New Agent</span>
+                <button class="action-btn workflow-btn skill-btn" data-skill="/commit" title="Create well-formatted commits via /commit skill">
+                    <span class="action-icon">&#x1F4BE;</span>
+                    <span>Commit</span>
+                    <span class="slash-cmd">/commit</span>
                 </button>
-                <button class="action-btn workflow-btn dynamic-create-btn" data-create-type="team" title="Create a custom AI agent team with Socratic-guided workflow">
-                    <span class="action-icon">&#x1F465;</span>
-                    <span>New Team</span>
+                <button class="action-btn workflow-btn skill-btn" data-skill="/pr" title="Create pull requests via /pr skill - structured descriptions">
+                    <span class="action-icon">&#x1F500;</span>
+                    <span>Create PR</span>
+                    <span class="slash-cmd">/pr</span>
+                </button>
+                <button class="action-btn workflow-btn agent-team-btn" data-skill="/release-prep" data-template="release-prep" title="Full release preparation via /release-prep skill">
+                    <span class="action-icon">&#x1F680;</span>
+                    <span>Release</span>
+                    <span class="slash-cmd">/release-prep</span>
                 </button>
             </div>
 
-            <!-- Release -->
-            <div style="margin-top: 12px; margin-bottom: 4px; font-size: 10px; opacity: 0.6; font-weight: 600;">RELEASE (Legacy)</div>
-            <div class="actions-grid workflow-grid">
-                <button class="action-btn workflow-btn" data-workflow="release-prep" title="Legacy release prep workflow - Use Meta-Orchestration version for better results">
-                    <span class="action-icon">&#x1F4CB;</span>
-                    <span>Release Prep (Old)</span>
-                </button>
-                <button class="action-btn workflow-btn" data-workflow="secure-release" title="Comprehensive security pipeline for production releases">
-                    <span class="action-icon">&#x1F680;</span>
-                    <span>Secure Release</span>
-                </button>
-            </div>
+
         </div>
 
         <!-- Workflow Results Panel (hidden by default) -->
@@ -2615,6 +2551,21 @@ export class EmpathyDashboardProvider implements vscode.WebviewViewProvider {
                     type: 'runAgentTeam',
                     skill: skill,
                     template: template,
+                    label: label
+                });
+            });
+        });
+
+        // v4.6.3: Skill button handlers - run skill directly via Claude Code
+        document.querySelectorAll('.skill-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const skill = this.dataset.skill;
+                const label = this.querySelector('span:not(.action-icon)').textContent;
+                console.log('[EmpathyDashboard] Skill button clicked:', skill);
+                vscode.postMessage({
+                    type: 'runSkill',
+                    skill: skill,
                     label: label
                 });
             });

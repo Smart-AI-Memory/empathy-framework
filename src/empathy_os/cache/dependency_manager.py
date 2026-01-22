@@ -14,6 +14,8 @@ from typing import Any
 
 import yaml
 
+from empathy_os.config import _validate_file_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,9 +67,10 @@ class DependencyManager:
         """Save configuration to disk."""
         try:
             self.config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.config_path, "w") as f:
+            validated_path = _validate_file_path(str(self.config_path))
+            with open(validated_path, "w") as f:
                 yaml.safe_dump(self.config, f, default_flow_style=False)
-        except (yaml.YAMLError, OSError) as e:
+        except (yaml.YAMLError, OSError, ValueError) as e:
             logger.error(f"Failed to save config: {e}")
 
     def is_cache_installed(self) -> bool:

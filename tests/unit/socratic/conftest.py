@@ -183,15 +183,21 @@ def sample_workflow_blueprint(sample_agent_spec):
 @pytest.fixture
 def sample_form():
     """Create a sample Form for testing."""
-    from empathy_os.socratic.forms import FieldOption, FieldType, Form, FormField
+    from empathy_os.socratic.forms import (
+        FieldOption,
+        FieldType,
+        FieldValidation,
+        Form,
+        FormField,
+    )
 
     return Form(
-        form_id="test-form-001",
+        id="test-form-001",
         title="Test Questions",
         description="Test form for Socratic questioning",
         fields=[
             FormField(
-                field_id="languages",
+                id="languages",
                 field_type=FieldType.MULTI_SELECT,
                 label="Programming Languages",
                 options=[
@@ -199,10 +205,10 @@ def sample_form():
                     FieldOption(value="javascript", label="JavaScript"),
                     FieldOption(value="typescript", label="TypeScript"),
                 ],
-                required=True,
+                validation=FieldValidation(required=True),
             ),
             FormField(
-                field_id="quality_focus",
+                id="quality_focus",
                 field_type=FieldType.MULTI_SELECT,
                 label="Quality Focus",
                 options=[
@@ -212,7 +218,7 @@ def sample_form():
                 ],
             ),
             FormField(
-                field_id="notes",
+                id="notes",
                 field_type=FieldType.TEXT_AREA,
                 label="Additional Notes",
                 placeholder="Any other requirements...",

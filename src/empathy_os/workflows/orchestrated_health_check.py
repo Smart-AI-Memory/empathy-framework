@@ -43,6 +43,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 from ..orchestration.agent_templates import AgentTemplate, get_template
 from ..orchestration.execution_strategies import (
     ParallelStrategy,
@@ -812,10 +814,11 @@ class OrchestratedHealthCheckWorkflow:
             }
 
             # Write health.json
-            with health_file.open("w") as f:
+            validated_health_file = _validate_file_path(str(health_file))
+            with validated_health_file.open("w") as f:
                 json.dump(health_data, f, indent=2)
 
-            logger.info(f"Saved health data to {health_file} for VS Code extension")
+            logger.info(f"Saved health data to {validated_health_file} for VS Code extension")
 
         except OSError as e:
             logger.warning(f"Failed to save health.json (file system error): {e}")

@@ -80,8 +80,9 @@ def safe_agent_operation(operation_name: str):
                                 "elapsed_seconds": elapsed,
                             },
                         )
-                    except Exception:
-                        pass  # Don't fail on audit trail errors
+                    except Exception:  # noqa: BLE001
+                        # INTENTIONAL: Audit trail is optional - don't fail the main operation
+                        pass
 
                 raise AgentOperationError(operation_name, e) from e
 

@@ -15,6 +15,8 @@ Licensed under Fair Source License 0.9
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 # Template definitions
 TEMPLATES: dict[str, dict[str, Any]] = {
     "minimal": {
@@ -682,16 +684,17 @@ def scaffold_project(
         if file_path == ".gitignore_additions":
             # Append to existing .gitignore or create new
             gitignore_path = target / ".gitignore"
-            if gitignore_path.exists():
-                with open(gitignore_path, "a") as f:
+            validated_gitignore = _validate_file_path(str(gitignore_path))
+            if validated_gitignore.exists():
+                with open(validated_gitignore, "a") as f:
                     f.write("\n" + actual_content)
             else:
-                full_path = gitignore_path
-                with open(full_path, "w") as f:
+                with open(validated_gitignore, "w") as f:
                     f.write(actual_content)
             created_files.append(".gitignore")
         else:
-            with open(full_path, "w") as f:
+            validated_path = _validate_file_path(str(full_path))
+            with open(validated_path, "w") as f:
                 f.write(actual_content)
             created_files.append(actual_path)
 

@@ -392,6 +392,7 @@ class TestSecurityErrorHandling:
 class TestIntegrationScenarios:
     """Test integration scenarios and edge cases."""
 
+    @pytest.mark.skipif(not HAS_ENCRYPTION, reason="cryptography library required")
     def test_encryption_key_rotation(self):
         """Test encryption with different keys."""
         key1 = os.urandom(32)
@@ -413,6 +414,7 @@ class TestIntegrationScenarios:
         with pytest.raises(SecurityError):
             manager2.decrypt(ciphertext)
 
+    @pytest.mark.skipif(not HAS_ENCRYPTION, reason="cryptography library required")
     def test_encryption_various_data_sizes(self):
         """Test encryption handles various data sizes."""
         manager = EncryptionManager()
@@ -481,6 +483,7 @@ class TestIntegrationScenarios:
         assert pattern is not None
         assert pattern["content"] == "Sensitive data"
 
+    @pytest.mark.skipif(not HAS_ENCRYPTION, reason="cryptography library required")
     def test_encryption_special_characters(self):
         """Test encryption handles special characters."""
         manager = EncryptionManager()
@@ -520,6 +523,7 @@ class TestIntegrationScenarios:
             )
             assert pattern is not None
 
+    @pytest.mark.skipif(not HAS_ENCRYPTION, reason="cryptography library required")
     def test_encryption_newlines_preserved(self):
         """Test encryption preserves newlines and formatting."""
         manager = EncryptionManager()

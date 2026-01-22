@@ -20,6 +20,7 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader
 from test_generator import TestGenerator
 
+from empathy_os.config import _validate_file_path
 from patterns import get_pattern_registry
 
 logger = logging.getLogger(__name__)
@@ -206,10 +207,11 @@ class PatternCompose:
 
         # Write file
         wizard_file = output_dir / f"{name}_wizard.py"
-        with open(wizard_file, "w") as f:
+        validated_wizard = _validate_file_path(str(wizard_file))
+        with open(validated_wizard, "w") as f:
             f.write(wizard_code)
 
-        logger.info(f"✓ Generated wizard file: {wizard_file}")
+        logger.info(f"✓ Generated wizard file: {validated_wizard}")
         return wizard_file
 
     def _generate_tests(self, name: str, pattern_ids: list[str]) -> list[Path]:
@@ -235,17 +237,19 @@ class PatternCompose:
         # Write unit tests
         unit_test_file = Path(f"tests/unit/wizards/test_{name}_wizard.py")
         unit_test_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(unit_test_file, "w") as f:
+        validated_unit_test = _validate_file_path(str(unit_test_file))
+        with open(validated_unit_test, "w") as f:
             f.write(tests["unit"])
-        test_files.append(unit_test_file)
-        logger.info(f"✓ Generated unit tests: {unit_test_file}")
+        test_files.append(validated_unit_test)
+        logger.info(f"✓ Generated unit tests: {validated_unit_test}")
 
         # Write fixtures
         fixtures_file = Path(f"tests/unit/wizards/fixtures_{name}.py")
-        with open(fixtures_file, "w") as f:
+        validated_fixtures = _validate_file_path(str(fixtures_file))
+        with open(validated_fixtures, "w") as f:
             f.write(tests["fixtures"])
-        test_files.append(fixtures_file)
-        logger.info(f"✓ Generated fixtures: {fixtures_file}")
+        test_files.append(validated_fixtures)
+        logger.info(f"✓ Generated fixtures: {validated_fixtures}")
 
         return test_files
 
@@ -326,10 +330,11 @@ pytest tests/unit/wizards/test_{name}_wizard.py --cov
 """
 
         readme_file = output_dir / f"{name}_README.md"
-        with open(readme_file, "w") as f:
+        validated_readme = _validate_file_path(str(readme_file))
+        with open(validated_readme, "w") as f:
             f.write(readme_content)
 
-        logger.info(f"✓ Generated README: {readme_file}")
+        logger.info(f"✓ Generated README: {validated_readme}")
         return readme_file
 
     def _get_template_name(self, wizard_type: str, patterns: list) -> str:

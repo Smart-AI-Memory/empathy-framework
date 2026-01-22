@@ -220,7 +220,9 @@ class TestOrchestratedReleasePrepWorkflow:
         assert workflow.quality_gates["max_critical_issues"] == 0.0
         assert workflow.quality_gates["min_doc_coverage"] == 100.0
         assert workflow.orchestrator is not None
-        assert workflow.agent_ids is None
+        # Default agent_ids are set
+        assert workflow.agent_ids is not None
+        assert len(workflow.agent_ids) > 0
 
     def test_workflow_initialization_custom_gates(self):
         """Test workflow initialization with custom quality gates."""

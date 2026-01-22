@@ -13,6 +13,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 from .registry import MODEL_REGISTRY, ModelInfo, ModelTier
 
 
@@ -198,7 +200,8 @@ class ProviderConfig:
         if path is None:
             path = Path.home() / ".empathy" / "provider_config.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w") as f:
+        validated_path = _validate_file_path(str(path))
+        with open(validated_path, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
@@ -559,5 +562,6 @@ def _save_hybrid_to_workflows_yaml(tier_selections: dict[str, str]) -> None:
     config["custom_models"]["hybrid"] = tier_selections
 
     # Write back
-    with open(workflows_path, "w") as f:
+    validated_workflows_path = _validate_file_path(str(workflows_path))
+    with open(validated_workflows_path, "w") as f:
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)

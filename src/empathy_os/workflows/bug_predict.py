@@ -235,6 +235,8 @@ def _is_dangerous_eval_usage(content: str, file_path: str) -> bool:
     - Pattern definitions for security scanners
     - Test fixtures: code written via write_text() or similar for testing
     - Scanner test files that deliberately contain example bad patterns
+    - Docstrings documenting security policies (e.g., "No eval() or exec() usage")
+    - Security policy documentation in comments
 
     Returns:
         True if dangerous eval/exec usage is found, False otherwise.
@@ -292,12 +294,20 @@ def _is_dangerous_eval_usage(content: str, file_path: str) -> bool:
         if "eval(" not in content_without_regex_exec and "exec(" not in content_without_regex_exec:
             return False
 
+    # Remove docstrings before line-by-line analysis
+    # This prevents false positives from documentation that mentions eval/exec
+    content_without_docstrings = _remove_docstrings(content)
+
     # Check each line for real dangerous usage
-    lines = content.splitlines()
+    lines = content_without_docstrings.splitlines()
     for line in lines:
         # Skip comment lines
         stripped = line.strip()
         if stripped.startswith("#") or stripped.startswith("//") or stripped.startswith("*"):
+            continue
+
+        # Skip security policy documentation (e.g., "- No eval() or exec()")
+        if _is_security_policy_line(stripped):
             continue
 
         # Check for eval( or exec( in this line
@@ -344,6 +354,65 @@ def _is_dangerous_eval_usage(content: str, file_path: str) -> bool:
 
         # This looks like real dangerous usage
         return True
+
+    return False
+
+
+def _remove_docstrings(content: str) -> str:
+    """Remove docstrings from Python content to avoid false positives.
+
+    Docstrings often document security policies (e.g., "No eval() usage")
+    which should not trigger the scanner.
+
+    Args:
+        content: Python source code
+
+    Returns:
+        Content with docstrings replaced by placeholder comments.
+    """
+    # Remove triple-quoted strings (docstrings)
+    # Match """ ... """ and ''' ... ''' including multiline
+    content = re.sub(r'"""[\s\S]*?"""', '# [docstring removed]', content)
+    content = re.sub(r"'''[\s\S]*?'''", "# [docstring removed]", content)
+    return content
+
+
+def _is_security_policy_line(line: str) -> bool:
+    """Check if a line is documenting security policy rather than using eval/exec.
+
+    Args:
+        line: Stripped line of code
+
+    Returns:
+        True if this appears to be security documentation.
+    """
+    line_lower = line.lower()
+
+    # Patterns indicating security policy documentation
+    policy_patterns = [
+        r"no\s+eval",  # "No eval" or "no eval()"
+        r"no\s+exec",  # "No exec" or "no exec()"
+        r"never\s+use\s+eval",
+        r"never\s+use\s+exec",
+        r"avoid\s+eval",
+        r"avoid\s+exec",
+        r"don'?t\s+use\s+eval",
+        r"don'?t\s+use\s+exec",
+        r"prohibited.*eval",
+        r"prohibited.*exec",
+        r"security.*eval",
+        r"security.*exec",
+    ]
+
+    for pattern in policy_patterns:
+        if re.search(pattern, line_lower):
+            return True
+
+    # Check for list item documentation (e.g., "- No eval() or exec() usage")
+    if line.startswith("-") and ("eval" in line_lower or "exec" in line_lower):
+        # If it contains "no", "never", "avoid", it's policy documentation
+        if any(word in line_lower for word in ["no ", "never", "avoid", "don't", "prohibited"]):
+            return True
 
     return False
 

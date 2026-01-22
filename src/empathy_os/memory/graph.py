@@ -22,6 +22,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from empathy_os.config import _validate_file_path
+
 from .edges import REVERSE_EDGE_TYPES, Edge, EdgeType
 from .nodes import Node, NodeType
 
@@ -124,7 +126,8 @@ class MemoryGraph:
         }
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "w") as f:
+        validated_path = _validate_file_path(str(self.path))
+        with open(validated_path, "w") as f:
             json.dump(data, f, indent=2)
 
     def _index_node(self, node: Node) -> None:

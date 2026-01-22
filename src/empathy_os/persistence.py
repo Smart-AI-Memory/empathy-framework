@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .config import _validate_file_path
 from .core import CollaborationState
 from .pattern_library import Pattern, PatternLibrary
 
@@ -73,7 +74,8 @@ class PatternPersistence:
             )
 
         # Write to file
-        with open(filepath, "w") as f:
+        validated_path = _validate_file_path(filepath)
+        with open(validated_path, "w") as f:
             json.dump(data, f, indent=2)
 
     @staticmethod
@@ -301,7 +303,8 @@ class StateManager:
             "saved_at": datetime.now().isoformat(),
         }
 
-        with open(filepath, "w") as f:
+        validated_path = _validate_file_path(str(filepath))
+        with open(validated_path, "w") as f:
             json.dump(data, f, indent=2)
 
     def load_state(self, user_id: str) -> CollaborationState | None:

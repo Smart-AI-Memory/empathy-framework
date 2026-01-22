@@ -370,6 +370,18 @@
           "default": true,
           "description": "Automatically run health scan when files are saved"
         },
+        "empathy.runHealthScanOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run health scan when VS Code opens the workspace (updates health.json)"
+        },
+        "empathy.healthScanInterval": {
+          "type": "number",
+          "default": 30,
+          "minimum": 0,
+          "maximum": 1440,
+          "description": "Interval in minutes to auto-regenerate health.json (0 to disable periodic scan)"
+        },
         "empathy.scanDebounceMs": {
           "type": "number",
           "default": 2000,

@@ -126,15 +126,15 @@ export class WorkflowExecutionService {
             cancellable: false,
         }, async (progress) => {
             try {
-                // Build command arguments
-                const args = ['-m', 'empathy_os.cli', 'workflow', 'run', workflow.name];
+                // v4.6.3: Build command arguments for 'empathy' CLI
+                const args = ['workflow', 'run', workflow.name];
 
                 if (input) {
                     args.push('--input', JSON.stringify(input));
                 }
 
-                // Execute workflow
-                const { stdout, stderr } = await execFile(pythonPath, args, {
+                // Execute workflow using empathy CLI
+                const { stdout, stderr } = await execFile('empathy', args, {
                     cwd: workspaceFolder,
                     timeout: 300000, // 5 minutes
                 });

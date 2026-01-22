@@ -215,7 +215,13 @@ class RedisMetrics:
         return (self.operations_success / self.operations_total) * 100
 
     def to_dict(self) -> dict:
-        """Convert to dictionary for reporting."""
+        """Convert metrics to dictionary for reporting and serialization.
+
+        Returns:
+            Dictionary with keys: operations_total, operations_success,
+            operations_failed, retries_total, latency_avg_ms, latency_max_ms,
+            success_rate, by_operation, security.
+        """
         return {
             "operations_total": self.operations_total,
             "operations_success": self.operations_success,
@@ -334,6 +340,12 @@ class StagedPattern:
             raise TypeError(f"interests must be list, got {type(self.interests).__name__}")
 
     def to_dict(self) -> dict:
+        """Convert staged pattern to dictionary for serialization.
+
+        Returns:
+            Dictionary with keys: pattern_id, agent_id, pattern_type, name,
+            description, code, context, confidence, staged_at, interests.
+        """
         return {
             "pattern_id": self.pattern_id,
             "agent_id": self.agent_id,
@@ -349,6 +361,19 @@ class StagedPattern:
 
     @classmethod
     def from_dict(cls, data: dict) -> "StagedPattern":
+        """Reconstruct StagedPattern from dictionary.
+
+        Args:
+            data: Dictionary with required keys: pattern_id, agent_id,
+                pattern_type, name, description, staged_at.
+
+        Returns:
+            Reconstructed StagedPattern instance.
+
+        Raises:
+            KeyError: If required keys are missing.
+            ValueError: If data format is invalid.
+        """
         return cls(
             pattern_id=data["pattern_id"],
             agent_id=data["agent_id"],
@@ -382,6 +407,12 @@ class ConflictContext:
     resolution: str | None = None
 
     def to_dict(self) -> dict:
+        """Convert conflict context to dictionary for serialization.
+
+        Returns:
+            Dictionary with keys: conflict_id, positions, interests,
+            batna, created_at, resolved, resolution.
+        """
         return {
             "conflict_id": self.conflict_id,
             "positions": self.positions,
@@ -394,6 +425,19 @@ class ConflictContext:
 
     @classmethod
     def from_dict(cls, data: dict) -> "ConflictContext":
+        """Reconstruct ConflictContext from dictionary.
+
+        Args:
+            data: Dictionary with required keys: conflict_id, positions,
+                interests, created_at.
+
+        Returns:
+            Reconstructed ConflictContext instance.
+
+        Raises:
+            KeyError: If required keys are missing.
+            ValueError: If data format is invalid.
+        """
         return cls(
             conflict_id=data["conflict_id"],
             positions=data["positions"],
@@ -723,9 +767,19 @@ class RedisShortTermMemory:
 
                 # Convert back to original type
                 if isinstance(data, dict):
-                    return json.loads(sanitized_str), pii_count
+                    try:
+                        return json.loads(sanitized_str), pii_count
+                    except json.JSONDecodeError:
+                        # If PII scrubbing broke JSON structure, return original
+                        # This can happen if regex matches part of JSON syntax
+                        logger.warning("pii_scrubbing_broke_json_returning_original")
+                        return data, 0
                 elif isinstance(data, list):
-                    return json.loads(sanitized_str), pii_count
+                    try:
+                        return json.loads(sanitized_str), pii_count
+                    except json.JSONDecodeError:
+                        logger.warning("pii_scrubbing_broke_json_returning_original")
+                        return data, 0
                 else:
                     return sanitized_str, pii_count
 

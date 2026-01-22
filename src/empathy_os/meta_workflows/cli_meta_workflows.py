@@ -25,6 +25,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.tree import Tree
 
+from empathy_os.config import _validate_file_path
 from empathy_os.meta_workflows import (
     MetaWorkflow,
     PatternLearner,
@@ -323,14 +324,16 @@ def generate_plan_cmd(
                     output_format="skill",
                 )
 
-            skill_path.write_text(plan_content)
-            console.print(f"\n[green]✓ Installed as Claude Code skill:[/green] {skill_path}")
+            validated_skill_path = _validate_file_path(str(skill_path))
+            validated_skill_path.write_text(plan_content)
+            console.print(f"\n[green]✓ Installed as Claude Code skill:[/green] {validated_skill_path}")
             console.print(f"\nRun with: [bold]/project:{template_id}[/bold]")
 
         elif output_file:
             # Write to file
-            Path(output_file).write_text(plan_content)
-            console.print(f"\n[green]✓ Plan saved to:[/green] {output_file}")
+            validated_output = _validate_file_path(output_file)
+            validated_output.write_text(plan_content)
+            console.print(f"\n[green]✓ Plan saved to:[/green] {validated_output}")
 
         else:
             # Print to stdout
@@ -1589,8 +1592,9 @@ def create_agent(
 
     # Save if requested
     if output_file:
-        Path(output_file).write_text(spec_json)
-        console.print(f"\n[green]Saved to:[/green] {output_file}")
+        validated_output = _validate_file_path(output_file)
+        validated_output.write_text(spec_json)
+        console.print(f"\n[green]Saved to:[/green] {validated_output}")
 
     # Show usage
     console.print("\n[bold]Next Steps:[/bold]")
@@ -1727,8 +1731,9 @@ def create_team(
 
     # Save if requested
     if output_file:
-        Path(output_file).write_text(spec_json)
-        console.print(f"\n[green]Saved to:[/green] {output_file}")
+        validated_output = _validate_file_path(output_file)
+        validated_output.write_text(spec_json)
+        console.print(f"\n[green]Saved to:[/green] {validated_output}")
 
     # Show usage
     console.print("\n[bold]Next Steps:[/bold]")

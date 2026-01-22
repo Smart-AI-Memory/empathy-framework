@@ -110,7 +110,8 @@ def analyze_source_file(source_file: Path) -> tuple[list[str], list[str]]:
                     classes.append(node.name)
 
         return (functions, classes)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
+        # INTENTIONAL: Graceful degradation - continue processing other files
         console.print(f"[yellow]Warning: Could not analyze {source_file}: {e}[/yellow]")
         return ([], [])
 
@@ -133,8 +134,8 @@ def get_function_signature(source_file: Path, func_name: str) -> dict | None:
                     "has_return": has_return,
                     "docstring": docstring
                 }
-    except Exception:
-        pass
+    except (SyntaxError, OSError) as e:
+        console.print(f"[dim]Could not parse function {func_name}: {e}[/dim]")
 
     return None
 
@@ -152,8 +153,8 @@ def get_class_methods(source_file: Path, class_name: str) -> list[str]:
                     if isinstance(item, ast.FunctionDef) and not item.name.startswith('_'):
                         methods.append(item.name)
                 return methods
-    except Exception:
-        pass
+    except (SyntaxError, OSError) as e:
+        console.print(f"[dim]Could not get methods for {class_name}: {e}[/dim]")
 
     return []
 
@@ -383,8 +384,10 @@ def implement_test_file(test_file: Path, dry_run: bool = False) -> Implementatio
                 match = re.search(r'(\d+) failed', output)
                 if match:
                     tests_failing = int(match.group(1))
-        except Exception as e:
-            error_message = str(e)
+        except subprocess.TimeoutExpired as e:
+            console.print(f"[yellow]Test timed out: {e}[/yellow]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[yellow]Test execution failed: {e}[/yellow]")
 
     return ImplementationResult(
         file_path=test_file,
@@ -505,7 +508,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         console.print("\n[yellow]Interrupted by user.[/yellow]")
         sys.exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
+        # INTENTIONAL: CLI boundary - show user-friendly error with traceback
         console.print(f"\n[bold red]Error: {e}[/bold red]")
         import traceback
         traceback.print_exc()

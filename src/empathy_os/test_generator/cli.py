@@ -15,6 +15,8 @@ import logging
 import sys
 from pathlib import Path
 
+from empathy_os.config import _validate_file_path
+
 from .generator import TestGenerator
 from .risk_analyzer import RiskAnalyzer
 
@@ -53,9 +55,10 @@ def cmd_generate(args):
 
     # Write unit tests
     unit_test_file = output_dir / f"test_{wizard_id}_wizard.py"
-    with open(unit_test_file, "w") as f:
+    validated_unit_test = _validate_file_path(str(unit_test_file))
+    with open(validated_unit_test, "w") as f:
         f.write(tests["unit"])
-    logger.info(f"✓ Unit tests written to: {unit_test_file}")
+    logger.info(f"✓ Unit tests written to: {validated_unit_test}")
 
     # Write integration tests (if generated)
     if tests["integration"]:
@@ -63,15 +66,17 @@ def cmd_generate(args):
             output_dir.parent.parent / "integration" / f"test_{wizard_id}_integration.py"
         )
         integration_test_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(integration_test_file, "w") as f:
+        validated_integration = _validate_file_path(str(integration_test_file))
+        with open(validated_integration, "w") as f:
             f.write(tests["integration"])
-        logger.info(f"✓ Integration tests written to: {integration_test_file}")
+        logger.info(f"✓ Integration tests written to: {validated_integration}")
 
     # Write fixtures
     fixtures_file = output_dir / f"fixtures_{wizard_id}.py"
-    with open(fixtures_file, "w") as f:
+    validated_fixtures = _validate_file_path(str(fixtures_file))
+    with open(validated_fixtures, "w") as f:
         f.write(tests["fixtures"])
-    logger.info(f"✓ Fixtures written to: {fixtures_file}")
+    logger.info(f"✓ Fixtures written to: {validated_fixtures}")
 
     print("\n🎉 Test generation complete!")
     print("\nGenerated files:")

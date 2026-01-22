@@ -54,6 +54,9 @@ let extensionPath: string;
 // Refresh timer
 let refreshTimer: NodeJS.Timeout | undefined;
 
+// Health scan timer (regenerates health.json periodically)
+let healthScanTimer: NodeJS.Timeout | undefined;
+
 // Diagnostics collection for Problem Panel (Feature F)
 let diagnosticCollection: vscode.DiagnosticCollection;
 
@@ -575,12 +578,11 @@ export function activate(context: vscode.ExtensionContext) {
 
             // Function to run the workflow
             const runWorkflow = () => {
-                const config = vscode.workspace.getConfiguration('empathy');
-                const pythonPath = config.get<string>('pythonPath', 'python');
+                // v4.6.3: Use 'empathy' CLI directly
                 const inputKey = selectedWorkflow!.value === 'health-check' ? 'path' : 'target';
-                const args = ['-m', 'empathy_os.cli', 'workflow', 'run', selectedWorkflow!.value, '--input', JSON.stringify({ [inputKey]: targetPath })];
+                const args = ['workflow', 'run', selectedWorkflow!.value, '--input', JSON.stringify({ [inputKey]: targetPath })];
 
-                cp.execFile(pythonPath, args, { cwd: workspaceFolder, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
+                cp.execFile('empathy', args, { cwd: workspaceFolder, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
                     const output = stdout || stderr || (error ? error.message : 'No output');
                     lastOutput = output;
                     const timestamp = new Date().toLocaleString();
@@ -655,6 +657,7 @@ export function activate(context: vscode.ExtensionContext) {
     startAutoRefresh(context);
     setupAutoScanOnSave(context); // Feature E
     setupSecurityFindingsWatcher(context); // Security diagnostics
+    setupPeriodicHealthScan(context); // Auto-regenerate health.json
 
     // Show welcome message on first activation
     showWelcomeIfNeeded(context);
@@ -670,6 +673,9 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
     if (refreshTimer) {
         clearInterval(refreshTimer);
+    }
+    if (healthScanTimer) {
+        clearInterval(healthScanTimer);
     }
     if (fileWatcher) {
         fileWatcher.dispose();
@@ -888,14 +894,14 @@ async function cmdRunSecurityScan() {
             }
 
             return new Promise<void>((resolve) => {
-                // Run security-audit workflow with JSON output
+                // v4.6.3: Run security-audit workflow with JSON output
                 const args = [
-                    '-m', 'empathy_os.cli', 'workflow', 'run', 'security-audit',
+                    'workflow', 'run', 'security-audit',
                     '--input', JSON.stringify({ target: workspaceFolder }),
                     '--json'
                 ];
 
-                cp.execFile(pythonPath, args, {
+                cp.execFile('empathy', args, {
                     cwd: workspaceFolder,
                     maxBuffer: 1024 * 1024 * 5, // 5MB buffer for large outputs
                     timeout: 120000 // 2 minute timeout
@@ -1204,6 +1210,73 @@ async function runEmpathyCommandWithProgress(command: string, message: string): 
 // ============================================================================
 // Feature E: Auto-Scan on Save
 // ============================================================================
+
+/**
+ * Set up periodic health scan to regenerate health.json automatically
+ * This ensures the dashboard always shows up-to-date health metrics
+ */
+function setupPeriodicHealthScan(context: vscode.ExtensionContext): void {
+    const config = vscode.workspace.getConfiguration('empathy');
+    const runOnStartup = config.get<boolean>('runHealthScanOnStartup', true);
+    const scanIntervalMinutes = config.get<number>('healthScanInterval', 30);
+
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspaceFolder) {
+        return;
+    }
+
+    const pythonPath = config.get<string>('pythonPath', 'python');
+    const empathyDir = path.join(workspaceFolder, config.get<string>('empathyDir', '.empathy'));
+
+    // Ensure .empathy directory exists
+    if (!fs.existsSync(empathyDir)) {
+        fs.mkdirSync(empathyDir, { recursive: true });
+    }
+
+    // Function to run the health scan silently
+    const runHealthScanSilent = () => {
+        const healthScriptPath = path.join(extensionPath, 'scripts', 'health_scan.py');
+
+        if (!fs.existsSync(healthScriptPath)) {
+            console.log('[Empathy] Health scan script not found, skipping auto-scan');
+            return;
+        }
+
+        cp.execFile(pythonPath, [healthScriptPath, workspaceFolder, empathyDir],
+            { cwd: workspaceFolder, timeout: 60000 },
+            (error) => {
+                if (error) {
+                    console.log('[Empathy] Background health scan completed with warnings');
+                } else {
+                    console.log('[Empathy] Background health scan completed successfully');
+                }
+                // Refresh UI after scan
+                healthProvider.refresh();
+                healthProvider.updateDiagnostics();
+                updateStatusBar();
+            }
+        );
+    };
+
+    // Run on startup if enabled
+    if (runOnStartup) {
+        // Delay startup scan by 5 seconds to let VS Code finish loading
+        setTimeout(() => {
+            console.log('[Empathy] Running health scan on startup...');
+            runHealthScanSilent();
+        }, 5000);
+    }
+
+    // Set up periodic scan if interval is positive
+    if (scanIntervalMinutes > 0) {
+        const intervalMs = scanIntervalMinutes * 60 * 1000;
+        healthScanTimer = setInterval(() => {
+            console.log('[Empathy] Running periodic health scan...');
+            runHealthScanSilent();
+        }, intervalMs);
+        console.log(`[Empathy] Periodic health scan enabled: every ${scanIntervalMinutes} minutes`);
+    }
+}
 
 function setupAutoScanOnSave(context: vscode.ExtensionContext): void {
     const config = vscode.workspace.getConfiguration('empathy');

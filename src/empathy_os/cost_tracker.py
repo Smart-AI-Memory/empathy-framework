@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 # Import pricing from unified registry
+from empathy_os.config import _validate_file_path
 from empathy_os.models import MODEL_REGISTRY
 from empathy_os.models.registry import TIER_PRICING
 
@@ -173,7 +174,8 @@ class CostTracker:
         New data is written to JSONL format via flush().
         """
         self.data["last_updated"] = datetime.now().isoformat()
-        with open(self.costs_file, "w") as f:
+        validated_path = _validate_file_path(str(self.costs_file))
+        with open(validated_path, "w") as f:
             json.dump(self.data, f, indent=2)
 
     def flush(self) -> None:
