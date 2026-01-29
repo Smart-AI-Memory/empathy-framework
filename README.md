@@ -210,7 +210,36 @@ python -m empathy_os.models.cli provider --set anthropic
 # Natural language support:
 /workflows "find security issues"
 /plan "review my code"
+
+# Direct tool access via MCP (v5.1.1+):
+# Claude Code automatically discovers Empathy tools through the MCP server
+# Just describe what you need in natural language:
+"Run a security audit on src/"          → Invokes security_audit tool
+"Generate tests for config.py"          → Invokes test_generation tool
+"Check my auth configuration"           → Invokes auth_status tool
+"Analyze performance bottlenecks"       → Invokes performance_audit tool
 ```
+
+**MCP Server Integration (v5.1.1+):**
+
+Empathy Framework now includes a Model Context Protocol (MCP) server that exposes all workflows as native Claude Code tools:
+
+- **10 Tools Available:** security_audit, bug_predict, code_review, test_generation, performance_audit, release_prep, auth_status, auth_recommend, telemetry_stats, dashboard_status
+- **Automatic Discovery:** No manual configuration needed - Claude Code finds tools via `.claude/mcp.json`
+- **Natural Language Access:** Describe your need and Claude invokes the appropriate tool
+- **Verification Hooks:** Automatic validation of Python/JSON files and workflow outputs
+
+To verify MCP integration:
+
+```bash
+# Check server is running
+echo '{"method":"tools/list","params":{}}' | PYTHONPATH=./src python -m empathy_os.mcp.server
+
+# Restart Claude Code to load the MCP server
+# Tools will appear in Claude's tool list automatically
+```
+
+See [.claude/MCP_TEST_RESULTS.md](.claude/MCP_TEST_RESULTS.md) for full integration details.
 
 **CLI:**
 
@@ -525,6 +554,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ## License
 
 **Apache License 2.0** - Free and open source for everyone. Use it, modify it, build commercial products with it. [Details →](LICENSE)
+
+---
+
+## Acknowledgements
+
+This project stands on the shoulders of giants. We are deeply grateful to the open source community and all the amazing projects that make this framework possible.
+
+**[View Full Acknowledgements →](ACKNOWLEDGEMENTS.md)**
+
+Special thanks to:
+
+- **[Anthropic](https://www.anthropic.com/)** - For Claude AI and the Model Context Protocol
+- **[LangChain](https://github.com/langchain-ai/langchain)** - Agent framework powering our meta-orchestration
+- **[FastAPI](https://github.com/tiangolo/fastapi)** - Modern Python web framework
+- **[pytest](https://github.com/pytest-dev/pytest)** - Testing framework making quality assurance effortless
+
+And to all 50+ open source projects we depend on. [See the complete list →](ACKNOWLEDGEMENTS.md)
+
+Want to contribute? See [CONTRIBUTORS.md](CONTRIBUTORS.md)
 
 ---
 

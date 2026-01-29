@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "empathy-framework"
-version = "5.1.1"
+version = "5.1.2"
 description = "AI collaboration framework with real LLM agent execution, AskUserQuestion tool integration, Socratic agent generation, progressive tier escalation (70-85% cost savings), meta-orchestration, dynamic agent composition (6 patterns), intelligent caching (85% hit rate), semantic workflow discovery, visual workflow editor, MCP integration for Claude Code, and multi-agent orchestration."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"

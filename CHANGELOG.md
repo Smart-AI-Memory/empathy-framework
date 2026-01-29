@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.2] - 2026-01-29
+
+### Added
+
+- **Community Attribution**: Comprehensive acknowledgements for open source software dependencies
+  - Added `ACKNOWLEDGEMENTS.md` with attribution for 50+ open source projects organized by category
+  - Added `CONTRIBUTORS.md` with contributor recognition system using all-contributors specification
+  - Each dependency includes project link, description, and how it's used in Empathy Framework
+  - Categories include: Core Framework, AI/LLM Integration, Memory & Storage, Web Framework & API, Security & Authentication, Observability & Telemetry, Developer Tools, Documentation, Editor Integration, Platform Compatibility, and Document Processing
+  - Updated `README.md` with links to acknowledgements and contributors documentation
+  - Demonstrates respect for open source community and proper attribution practices
+
+### Documentation
+
+- Proper recognition of all open source contributors whose work makes Empathy Framework possible
+- Clear attribution following best practices for open source software
+- Guidelines for contributors to add new dependencies with proper acknowledgements
+
 ## [5.1.1] - 2026-01-29
 
 ### Added
