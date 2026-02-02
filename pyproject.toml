@@ -65,13 +65,13 @@ dependencies = [
 [project.optional-dependencies]
 # LLM providers (user chooses which they need)
 anthropic = ["anthropic>=0.25.0,<1.0.0"]
-openai = ["openai>=1.12.0,<2.0.0"]
+openai = ["openai>=1.12.0,<3.0.0"]
 # Note: google-generativeai is deprecated but still works; google-genai requires
 # tenacity>=9.1.2 (now compatible with langchain>=0.3.0). Ready to migrate.
 google = ["google-generativeai>=0.3.0,<1.0.0"]
 llm = [
     "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "openai>=1.12.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
 ]
 
@@ -112,7 +112,7 @@ cache = [
 healthcare = [
     # Everything in enterprise
     "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "openai>=1.12.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     "memdocs>=1.0.0",
     "langchain>=1.0.0,<2.0.0",
@@ -202,7 +202,7 @@ dev = [
 developer = [
     # LLM providers
     "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "openai>=1.12.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
@@ -222,7 +222,7 @@ developer = [
 enterprise = [
     # Everything in developer
     "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "openai>=1.12.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     "memdocs>=1.0.0",
     "langchain>=1.0.0,<2.0.0",
@@ -249,7 +249,7 @@ enterprise = [
 full = [
     # LLM providers
     "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "openai>=1.12.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
@@ -269,7 +269,7 @@ full = [
 all = [
     # LLM providers
     "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "openai>=1.12.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
