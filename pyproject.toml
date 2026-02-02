@@ -126,7 +126,7 @@ healthcare = [
     "fastapi>=0.109.1,<1.0.0",
     "uvicorn>=0.20.0,<1.0.0",
     "starlette>=0.40.0,<1.0.0",
-    "bcrypt>=4.0.0,<5.0.0",
+    "bcrypt>=4.0.0,<6.0.0",
     "PyJWT[crypto]>=2.8.0",
     # OpenTelemetry for enterprise telemetry
     "opentelemetry-api>=1.20.0,<2.0.0",
@@ -146,7 +146,7 @@ backend = [
     "fastapi>=0.109.1,<1.0.0",  # CVE fix: PYSEC-2024-38
     "uvicorn>=0.20.0,<1.0.0",
     "starlette>=0.40.0,<1.0.0",  # CVE fix: GHSA-f96h, GHSA-2c2j
-    "bcrypt>=4.0.0,<5.0.0",  # Password hashing (cost factor 12)
+    "bcrypt>=4.0.0,<6.0.0",  # Password hashing (cost factor 12)
     "PyJWT[crypto]>=2.8.0",  # JWT auth - uses cryptography (no ecdsa CVE)
 ]
 
@@ -237,7 +237,7 @@ enterprise = [
     "fastapi>=0.109.1,<1.0.0",
     "uvicorn>=0.20.0,<1.0.0",
     "starlette>=0.40.0,<1.0.0",
-    "bcrypt>=4.0.0,<5.0.0",  # Secure password hashing
+    "bcrypt>=4.0.0,<6.0.0",  # Secure password hashing
     "PyJWT[crypto]>=2.8.0",  # JWT authentication
     # OpenTelemetry for enterprise telemetry
     "opentelemetry-api>=1.20.0,<2.0.0",
@@ -287,7 +287,7 @@ all = [
     "fastapi>=0.109.1,<1.0.0",  # CVE fix
     "uvicorn>=0.20.0,<1.0.0",
     "starlette>=0.40.0,<1.0.0",  # CVE fix
-    "bcrypt>=4.0.0,<5.0.0",  # Secure password hashing
+    "bcrypt>=4.0.0,<6.0.0",  # Secure password hashing
     "PyJWT[crypto]>=2.8.0",  # JWT authentication
     # LSP
     "pygls>=1.0.0,<2.0.0",
