@@ -287,6 +287,10 @@ async with EmpathyOS() as empathy:
 
 ---
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/smart-ai-memory-empathy-framework).
+
 ## Command Hubs
 
 Workflows are organized into hubs for easy discovery:
