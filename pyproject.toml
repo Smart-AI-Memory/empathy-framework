@@ -56,7 +56,7 @@ dependencies = [
     "rich>=13.0.0,<14.0.0",  # Beautiful CLI output
     "typer>=0.9.0,<1.0.0",  # Better CLI commands
     "pyyaml>=6.0,<7.0",  # Required by workflows (bug_predict, etc.)
-    "anthropic>=0.25.0,<1.0.0",  # Core LLM provider (direct SDK usage)
+    "anthropic>=0.94.0,<1.0.0",  # Core LLM provider (direct SDK usage)
 ]
 # NOTE: CrewAI and LangChain moved to optional dependencies in v4.4.0
 # The "Crew" workflows use EmpathyLLMExecutor (Anthropic SDK) directly,
@@ -64,14 +64,14 @@ dependencies = [
 
 [project.optional-dependencies]
 # LLM providers (user chooses which they need)
-anthropic = ["anthropic>=0.25.0,<1.0.0"]
-openai = ["openai>=1.12.0,<2.0.0"]
+anthropic = ["anthropic>=0.94.0,<1.0.0"]
+openai = ["openai>=2.31.0,<3.0.0"]
 # Note: google-generativeai is deprecated but still works; google-genai requires
 # tenacity>=9.1.2 (now compatible with langchain>=0.3.0). Ready to migrate.
 google = ["google-generativeai>=0.3.0,<1.0.0"]
 llm = [
-    "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "anthropic>=0.94.0,<1.0.0",
+    "openai>=2.31.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
 ]
 
@@ -111,8 +111,8 @@ cache = [
 # NOTE: Only install this if you need HIPAA/GDPR compliance features
 healthcare = [
     # Everything in enterprise
-    "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "anthropic>=0.94.0,<1.0.0",
+    "openai>=2.31.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     "memdocs>=1.0.0",
     "langchain>=1.0.0,<2.0.0",
@@ -201,8 +201,8 @@ dev = [
 # Individual developers - lightweight, software development focused
 developer = [
     # LLM providers
-    "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "anthropic>=0.94.0,<1.0.0",
+    "openai>=2.31.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
@@ -221,8 +221,8 @@ developer = [
 # Teams/enterprises - backend + authentication + compliance (excludes healthcare)
 enterprise = [
     # Everything in developer
-    "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "anthropic>=0.94.0,<1.0.0",
+    "openai>=2.31.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     "memdocs>=1.0.0",
     "langchain>=1.0.0,<2.0.0",
@@ -248,8 +248,8 @@ enterprise = [
 # Alias for backwards compatibility (maps to developer)
 full = [
     # LLM providers
-    "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "anthropic>=0.94.0,<1.0.0",
+    "openai>=2.31.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
@@ -268,8 +268,8 @@ full = [
 # Everything including development tools
 all = [
     # LLM providers
-    "anthropic>=0.25.0,<1.0.0",
-    "openai>=1.12.0,<2.0.0",
+    "anthropic>=0.94.0,<1.0.0",
+    "openai>=2.31.0,<3.0.0",
     "google-generativeai>=0.3.0,<1.0.0",
     # MemDocs integration
     "memdocs>=1.0.0",
